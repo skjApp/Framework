@@ -196,7 +196,7 @@ function createLayer(layer)
 	// alert(type) ;
 	type = data[layer]['type'] ;
 	
-	if(type == 'ui.layer.image')
+	if(type == 'ui.layer.image' || type == 'ui.layer.image.frame')
 	{
 		src = data[layer]['src'] ;
 		
@@ -221,7 +221,11 @@ function updateLayer()
 function drawLayer(layer)
 {
 	// alert(type) ;
-	type = data[layer]['type'] ;
+	type= data[layer]['type'] ;
+	x	= data[layer]['x'] ;
+	y	= data[layer]['y'] ;
+	w	= data[layer]['width'] ;
+	h	= data[layer]['height'] ;
 	
 	if(type == 'ui.layer.image')
 	{
@@ -229,7 +233,24 @@ function drawLayer(layer)
 		
 		if(image != undefined)
 		{
-			ctx.drawImage(image,0,0) ;
+			ctx.drawImage(image,x,y) ;
+		}
+	}
+	else if(type == 'ui.layer.image.frame')
+	{
+		image = data[layer]['image'] ;
+		frames= data[layer]['frames'] ;
+		currentFrame = data[layer]['currentFrame'] ;
+		
+		xOffset	= frames[currentFrame]['xOffset'] ;
+		yOffset	= frames[currentFrame]['yOffset'] ;
+		w		= frames[currentFrame]['width'] ;
+		h		= frames[currentFrame]['height'] ;
+		
+		
+		if(image != undefined)
+		{
+			ctx.drawImage(image, xOffset, yOffset,w,h, x,y,w,h) ;
 		}
 	}
 }
