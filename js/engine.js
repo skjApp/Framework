@@ -139,7 +139,8 @@ function updateApp()
 
 function drawApp()
 {
-	drawPage(appCurrentPage) ;	
+	ctx.clearRect(appX, appY, appWidth, appHeight) ;
+	drawPage(appCurrentPage) ;
 }
 
 function deleteApp()
@@ -196,7 +197,7 @@ function createLayer(layer)
 	// alert(type) ;
 	type = data[layer]['type'] ;
 	
-	if(type == 'ui.layer.image' || type == 'ui.layer.image.frame')
+	if(type == 'ui.layer.image' || type == 'ui.layer.image.frame' || type == 'ui.layer.image.animation')
 	{
 		src = data[layer]['src'] ;
 		
@@ -205,6 +206,11 @@ function createLayer(layer)
 		
 		data[layer]['image'] = img ;
 		data[app]['images'].push(img) ;
+	}
+	
+	if(type == 'ui.layer.image.animation')
+	{
+		data[layer]['animationIndex'] = 0 ;
 	}
 }
 
@@ -221,11 +227,13 @@ function updateLayer()
 function drawLayer(layer)
 {
 	// alert(type) ;
-	type= data[layer]['type'] ;
-	x	= data[layer]['x'] ;
-	y	= data[layer]['y'] ;
-	w	= data[layer]['width'] ;
-	h	= data[layer]['height'] ;
+	type	= data[layer]['type'] ;
+	x		= data[layer]['x'] ;
+	y		= data[layer]['y'] ;
+	w		= data[layer]['width'] ;
+	h		= data[layer]['height'] ;
+	
+	state	= data[layer]['state'] ;
 	
 	if(type == 'ui.layer.image')
 	{
@@ -238,19 +246,56 @@ function drawLayer(layer)
 	}
 	else if(type == 'ui.layer.image.frame')
 	{
-		image = data[layer]['image'] ;
-		frames= data[layer]['frames'] ;
-		currentFrame = data[layer]['currentFrame'] ;
+		image			= data[layer]['image'] ;
+		framesArray		= data[layer]['frames'] ;
+		currentFrame 	= data[layer]['currentFrame'] ;
 		
-		xOffset	= frames[currentFrame]['xOffset'] ;
-		yOffset	= frames[currentFrame]['yOffset'] ;
-		w		= frames[currentFrame]['width'] ;
-		h		= frames[currentFrame]['height'] ;
+		xOffset	= framesArray[currentFrame]['xOffset'] ;
+		yOffset	= framesArray[currentFrame]['yOffset'] ;
+		w		= framesArray[currentFrame]['width'] ;
+		h		= framesArray[currentFrame]['height'] ;
 		
 		
 		if(image != undefined)
 		{
 			ctx.drawImage(image, xOffset, yOffset,w,h, x,y,w,h) ;
+		}
+	}
+	else if(type == 'ui.layer.image.animation')
+	{
+		animation		= data[layer]['animation'] ;
+		sequence		= animation[state] ;
+		animationIndex	= data[layer]['animationIndex'] ;
+		
+		image 			= data[layer]['image'] ;
+		framesArray		= data[layer]['frames'] ;
+		currentFrame	= sequence[animationIndex]['frame'] ;
+		
+		dx				= sequence[animationIndex]['dx'] ;
+		dy				= sequence[animationIndex]['dy'] ;
+		
+		xOffset	= framesArray[currentFrame]['xOffset'] ;
+		yOffset	= framesArray[currentFrame]['yOffset'] ;
+		w		= framesArray[currentFrame]['width'] ;
+		h		= framesArray[currentFrame]['height'] ;
+		
+		
+		if(image != undefined)
+		{
+			ctx.drawImage(image, xOffset, yOffset,w,h, x,y,w,h) ;
+		}
+		
+		data[layer]['x'] += dx ;
+		data[layer]['y'] += dy ;
+		
+		
+		if(animationIndex < ((sequence.length) - 1))
+		{
+			data[layer]['animationIndex']++ ;
+		}
+		else
+		{
+			data[layer]['animationIndex'] = 0 ;
 		}
 	}
 }

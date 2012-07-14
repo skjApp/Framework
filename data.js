@@ -10,7 +10,7 @@ var data =
 		'width'		: 500,
 		'height'	: 500,
 		
-		'maxFrameRate'	: 2,
+		'maxFrameRate'	: 20,
 		
 		
 		'pages'			: ['page1'],
@@ -30,15 +30,17 @@ var data =
 	
 	'layer1' :
 	{
-		'type'	: 'ui.layer.image.frame',
-		'src'	: 'C:/Users/Saurabh/Documents/GitHub/Framework-HTML5/images/BalloonBoy.png',
+		'type'	: 'ui.layer.image.animation',
+		'src'	: 'file:///C:/Users/Saurabh/Documents/GitHub/Framework-HTML5/images/BalloonBoy.png',
 		
-		'x'		: 100,
-		'y'		: 200,
+		'x'		: 0,
+		'y'		: 0,
 		'width'	: 41,
 		'height': 78,
 		
-		'currentFrame' : 2,
+		'state'	: 'move',
+		
+		'currentFrame' : 0,
 		
 		'frames':[
 					{'xOffset' :  0, 'yOffset' : 0, 'width' : 41, 'height' : 78},
@@ -56,8 +58,23 @@ var data =
 					{'xOffset' :325, 'yOffset' : 0, 'width' : 41, 'height' : 78},
 					{'xOffset' :366, 'yOffset' : 0, 'width' : 41, 'height' : 78},
 					{'xOffset' :407, 'yOffset' : 0, 'width' : 41, 'height' : 78}
-				]
+				],
+				
+		'animation' :
+		{
+			'move': [
+						{'frame': 0,'dx': 1,'dy': 0},
+						{'frame': 0,'dx': 1,'dy': 0},
+						{'frame': 1,'dx': 1,'dy': 0},
+						{'frame': 1,'dx': 1,'dy': 0},
+						{'frame': 2,'dx': 1,'dy': 0},
+						{'frame': 2,'dx': 1,'dy': 0},
+						{'frame': 1,'dx': 1,'dy': 0},
+						{'frame': 1,'dx': 1,'dy': 0}
+					]
+		}
 		
-		//'image' : undefined
+		//'image'			: undefined
+		//'animationIndex' : undefined
 	}
 }
