@@ -8,6 +8,7 @@ var appMaxFrameRate ;
 var appTickTime ;
 var appTicks	= 0 ;
 var appTime		= 0 ; // App Time in Milliseconds
+var appCurrentPage ;
 
 var pages ;
 
@@ -102,6 +103,7 @@ function createApp()
 	
 	
 	pages = data[app]['pages'] ;
+	appCurrentPage = data[app]['currentPage'] ;
 	
 	// Creating Resource Arrays
 	var images = new Array() ;
@@ -137,7 +139,7 @@ function updateApp()
 
 function drawApp()
 {
-	alert('drawApp') ;
+	drawPage(appCurrentPage) ;	
 }
 
 function deleteApp()
@@ -162,9 +164,25 @@ function createPage(page)
 	}
 }
 
+function getPage()
+{
+	
+}
+
 function updatePage()
 {
 	
+}
+
+function drawPage(page)
+{
+	// Initializing Layers
+	layers = data[page]['layers'] ;
+	
+	for(var i = 0; i < layers.length;i++)
+	{
+		drawLayer(layers[i]) ;
+	}
 }
 
 function deletePage()

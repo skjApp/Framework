@@ -13,7 +13,8 @@ var data =
 		'maxFrameRate'	: 2,
 		
 		
-		'pages'		: ['page1']
+		'pages'			: ['page1'],
+		'currentPage'	: 'page1'
 		
 		//'images'	: []
 		//'audios'	: []
