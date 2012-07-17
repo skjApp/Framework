@@ -1,4 +1,4 @@
-var createuilayerimage = function createUILayerImage(layer)
+var create_ui_layer_image = function createUILayerImage(layer)
 {
 	src = data[layer]['src'] ;
 		
@@ -9,17 +9,17 @@ var createuilayerimage = function createUILayerImage(layer)
 	data[app]['images'].push(img) ;
 } ;
 
-var getuilayerimage = function getUILayerImage()
+var get_ui_layer_image = function getUILayerImage()
 {
 	alert('getUILayerImageFrame') ;
 }
 
-var updateuilayerimage = function updateUILayerImage()
+var update_ui_layer_image = function updateUILayerImage()
 {
 	alert('updateUILayerImageFrame') ;
 }
 
-var drawuilayerimage = function drawUILayerImage(layer)
+var draw_ui_layer_image = function drawUILayerImage(layer)
 {
 	image = data[layer]['image'] ;
 		
@@ -29,7 +29,7 @@ var drawuilayerimage = function drawUILayerImage(layer)
 	}
 }
 
-var deleteuilayerimage = function deleteUILayerImage()
+var delete_ui_layer_image = function deleteUILayerImage()
 {
 	alert('deleteUILayerImageFrame') ;
 }
@@ -37,9 +37,9 @@ var deleteuilayerimage = function deleteUILayerImage()
 
 data['engine']['ui.layer.image'] = 
 {
-	'createLayer'	: createuilayerimage 	,
-	'getLayer'		: getuilayerimage		,
-	'updateLayer'	: updateuilayerimage	,
-	'drawLayer'		: drawuilayerimage		,
-	'deleteLayer'	: deleteuilayerimage
+	'createLayer'	: create_ui_layer_image 	,
+	'getLayer'		: get_ui_layer_image		,
+	'updateLayer'	: update_ui_layer_image	,
+	'drawLayer'		: draw_ui_layer_image		,
+	'deleteLayer'	: delete_ui_layer_image
 } ;

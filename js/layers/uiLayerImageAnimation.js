@@ -1,4 +1,4 @@
-var createuilayerimageanimation = function createUILayerImageAnimation(layer)
+var create_ui_layer_image_animation = function createUILayerImageAnimation(layer)
 {
 	src = data[layer]['src'] ;
 		
@@ -11,17 +11,17 @@ var createuilayerimageanimation = function createUILayerImageAnimation(layer)
 	data[layer]['animationIndex'] = 0 ;
 } ;
 
-var getuilayerimageanimation = function getUILayerImageAnimation()
+var get_ui_layer_image_animation = function getUILayerImageAnimation()
 {
 	alert('getUILayerImageAnimation') ;
 }
 
-var updateuilayerimageanimation = function updateUILayerImageAnimation()
+var update_ui_layer_image_animation = function updateUILayerImageAnimation()
 {
 	alert('updateUILayerImageAnimation') ;
 }
 
-var drawuilayerimageanimation = function drawUILayerImageAnimation(layer)
+var draw_ui_layer_image_animation = function drawUILayerImageAnimation(layer)
 {
 	
 	animation = data[layer]['animation'];
@@ -59,7 +59,7 @@ var drawuilayerimageanimation = function drawUILayerImageAnimation(layer)
 
 }
 
-var deleteuilayerimageanimation = function deleteUILayerImageAnimation()
+var delete_ui_layer_image_animation = function deleteUILayerImageAnimation()
 {
 	alert('deleteUILayerImageAnimation') ;
 }
@@ -67,9 +67,9 @@ var deleteuilayerimageanimation = function deleteUILayerImageAnimation()
 
 data['engine']['ui.layer.image.animation'] = 
 {
-	'createLayer'	: createuilayerimageanimation 	,
-	'getLayer'		: getuilayerimageanimation		,
-	'updateLayer'	: updateuilayerimageanimation	,
-	'drawLayer'		: drawuilayerimageanimation		,
-	'deleteLayer'	: deleteuilayerimageanimation
+	'createLayer'	: create_ui_layer_image_animation 	,
+	'getLayer'		: get_ui_layer_image_animation		,
+	'updateLayer'	: update_ui_layer_image_animation	,
+	'drawLayer'		: draw_ui_layer_image_animation		,
+	'deleteLayer'	: delete_ui_layer_image_animation
 } ;
