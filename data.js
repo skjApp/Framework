@@ -1,5 +1,17 @@
 var data = 
 {
+	'engine' :
+	{
+		'app'		: 'app1',
+		
+		'plugins'	:
+		{
+			'ui.layer.image.frame'		: 'uiLayerImageFrame.js',
+			'ui.layer.image.animation'	: 'js/uiLayerImageAnimation.js',
+			'ui.layer.image.sprite'		: 'js/uiLayerImageSprite.js'
+		}
+	},
+	
 	'app1' :
 	{
 		'type'		: 'app',

@@ -2,18 +2,22 @@
 ////GLOBAL VARIABLES/////
 /////////////////////////
 
+// Engine
+var canvas ;
+var ctx ;
+
+// App
 var app ;
 var appX, appY, appWidth, appHeight ;
 var appMaxFrameRate ;
 var appTickTime ;
 var appTicks	= 0 ;
 var appTime		= 0 ; // App Time in Milliseconds
+var appStartTime= 0 ;
 var appCurrentPage ;
 
+// Pages
 var pages ;
-
-var canvas ;
-var ctx ;
 
 /////////////////////////
 /////  ENGINE CODE	/////
@@ -125,6 +129,9 @@ function createApp()
 	// Starting Timer
 	appTickTime = 1000 / appMaxFrameRate ;
 	setInterval(drawApp,appTickTime) ;
+	
+	date 	= new Date();
+	appStartTime= date.getTime();
 }
 
 function getApp()
@@ -139,8 +146,13 @@ function updateApp()
 
 function drawApp()
 {
+	date 	= new Date();
+	appTime= date.getTime() - appStartTime;
+	
+	
 	ctx.clearRect(appX, appY, appWidth, appHeight) ;
 	drawPage(appCurrentPage) ;
+	appTicks++ ;
 }
 
 function deleteApp()
@@ -194,24 +206,10 @@ function deletePage()
 // LAYER CODE
 function createLayer(layer)
 {	
-	// alert(type) ;
 	type = data[layer]['type'] ;
 	
-	if(type == 'ui.layer.image' || type == 'ui.layer.image.frame' || type == 'ui.layer.image.animation')
-	{
-		src = data[layer]['src'] ;
-		
-		var img = new Image() ;
-		img.src = src ;
-		
-		data[layer]['image'] = img ;
-		data[app]['images'].push(img) ;
-	}
-	
-	if(type == 'ui.layer.image.animation')
-	{
-		data[layer]['animationIndex'] = 0 ;
-	}
+	// Calling createLayer function in specific layer plugin
+	data['engine'][type]['createLayer'](layer) ;
 }
 
 function getLayer()
@@ -235,69 +233,8 @@ function drawLayer(layer)
 	
 	state	= data[layer]['state'] ;
 	
-	if(type == 'ui.layer.image')
-	{
-		image = data[layer]['image'] ;
-		
-		if(image != undefined)
-		{
-			ctx.drawImage(image,x,y) ;
-		}
-	}
-	else if(type == 'ui.layer.image.frame')
-	{
-		image			= data[layer]['image'] ;
-		framesArray		= data[layer]['frames'] ;
-		currentFrame 	= data[layer]['currentFrame'] ;
-		
-		xOffset	= framesArray[currentFrame]['xOffset'] ;
-		yOffset	= framesArray[currentFrame]['yOffset'] ;
-		w		= framesArray[currentFrame]['width'] ;
-		h		= framesArray[currentFrame]['height'] ;
-		
-		
-		if(image != undefined)
-		{
-			ctx.drawImage(image, xOffset, yOffset,w,h, x,y,w,h) ;
-		}
-	}
-	else if(type == 'ui.layer.image.animation')
-	{
-		animation		= data[layer]['animation'] ;
-		sequence		= animation[state] ;
-		animationIndex	= data[layer]['animationIndex'] ;
-		
-		image 			= data[layer]['image'] ;
-		framesArray		= data[layer]['frames'] ;
-		currentFrame	= sequence[animationIndex]['frame'] ;
-		
-		dx				= sequence[animationIndex]['dx'] ;
-		dy				= sequence[animationIndex]['dy'] ;
-		
-		xOffset	= framesArray[currentFrame]['xOffset'] ;
-		yOffset	= framesArray[currentFrame]['yOffset'] ;
-		w		= framesArray[currentFrame]['width'] ;
-		h		= framesArray[currentFrame]['height'] ;
-		
-		
-		if(image != undefined)
-		{
-			ctx.drawImage(image, xOffset, yOffset,w,h, x,y,w,h) ;
-		}
-		
-		data[layer]['x'] += dx ;
-		data[layer]['y'] += dy ;
-		
-		
-		if(animationIndex < ((sequence.length) - 1))
-		{
-			data[layer]['animationIndex']++ ;
-		}
-		else
-		{
-			data[layer]['animationIndex'] = 0 ;
-		}
-	}
+	// Calling drawLayer function in specific layer plugin
+	data['engine'][type]['drawLayer'](layer) ;
 }
 
 function deleteLayer()
