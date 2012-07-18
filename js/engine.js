@@ -105,6 +105,10 @@ function createApp()
 	
 	ctx			= canvas.getContext('2d') ;
 	
+	// Setting Default Stroke Style and Fill Style as Black Color
+	ctx.strokeStyle = '#000000' ;
+	ctx.fillStyle	= '#000000' ;
+	
 	
 	pages = data[app]['pages'] ;
 	appCurrentPage = data[app]['currentPage'] ;

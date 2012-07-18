@@ -6,9 +6,9 @@ var data =
 		
 		'plugins'	:
 		{
-			'ui.layer.image.frame'		: 'uiLayerImageFrame.js',
-			'ui.layer.image.animation'	: 'js/uiLayerImageAnimation.js',
-			'ui.layer.image.sprite'		: 'js/uiLayerImageSprite.js'
+			'ui.layer.image.frame'		: 'js/layers/uiLayerImage.js',
+			'ui.layer.image.animation'	: 'js/layers/uiLayerImageFrame.js',
+			'ui.layer.image.sprite'		: 'js/layers/uiLayerImageAnimation.js"'
 		}
 	},
 	
@@ -37,7 +37,7 @@ var data =
 	{
 		'type'		: 'ui.page',
 		
-		'layers'	: ['layer1']
+		'layers'	: ['layer1','layer2']
 	},
 	
 	'layer1' :
@@ -88,5 +88,25 @@ var data =
 		
 		//'image'			: undefined
 		//'animationIndex' : undefined
+	},
+	
+	/*'layer2' :
+	{
+		'type'	: 'ui.layer.shape.line',
+		
+		'x'		: 0,
+		'y'		: 0,
+		'endX'	: 100,
+		'endY'	: 0
+	}*/
+	
+	'layer2' :
+	{
+		'type'	: 'ui.layer.shape.rectangle',
+		
+		'x'		: 0,
+		'y'		: 0,
+		'width'	: 100,
+		'height': 100
 	}
 }
