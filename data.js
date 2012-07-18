@@ -4,12 +4,7 @@ var data =
 	{
 		'app'		: 'app1',
 		
-		'plugins'	:
-		{
-			'ui.layer.image.frame'		: 'js/layers/uiLayerImage.js',
-			'ui.layer.image.animation'	: 'js/layers/uiLayerImageFrame.js',
-			'ui.layer.image.sprite'		: 'js/layers/uiLayerImageAnimation.js"'
-		}
+		'pluginfiles'	: ['js/ui/layers/uiLayerImage.js', 'js/ui/layers/uiLayerShape.js']
 	},
 	
 	'app1' :

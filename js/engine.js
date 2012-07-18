@@ -27,7 +27,26 @@ function createEngine(lApp)
 {	
 	// alert('createEngine') ;
 	app = lApp ;
-	createApp() ;
+	
+	var scriptFiles = data['engine']['pluginfiles'] ;
+	var scripts = scriptFiles.length ;
+	
+	for(var i = 0; i < scripts; i++)
+	{
+		var script	= document.createElement('script') ;
+		script.setAttribute('type','text/javascript') ;
+		script.setAttribute('src' ,scriptFiles[i]) ;
+	
+		document.getElementsByTagName("head")[0].appendChild(script) ;
+	}
+	
+	
+	script.onload = createApp ;
+}
+
+function scriptLoadCounter()
+{
+	
 }
 
 function updateEngine()
@@ -287,7 +306,6 @@ function deleteLayerPart()
 // ALARMS CODE
 // MAIL CODE
 // PHOTOS CODE
-// DEVICE SETTINGS CODE
 // VIDEOS CODE
 // MESSAGES CODE
 // NOTES CODE
@@ -298,6 +316,7 @@ function deleteLayerPart()
 /////	DEVICE CODE	/////
 /////////////////////////
 
+// DEVICE SETTINGS CODE
 
 /////////////////////////
 /////	DB CODE		/////
