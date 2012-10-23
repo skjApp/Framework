@@ -1,3 +1,5 @@
+// Framework's Data and Code
+
 /////////////////////////
 ////GLOBAL CONSTANTS/////
 /////////////////////////
@@ -28,7 +30,10 @@ var engine =
 	'keyPress'		: [],
 	'keyUp'			: [],
 	
-	'touchLayer'	: undefined
+	'touchLayer'	: undefined,
+	'touchLayerPart': undefined,
+	
+	'resourcesLoaded'	: false
 } ;
 
 var consoleDiv ;
@@ -36,6 +41,15 @@ var canvas ;
 var ctx ;
 
 var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||  window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame ;
+
+// Script Variables
+var totalScripts= 0 ;
+var scriptLoaded= 0 ;
+
+// Resource Variables
+var totalRes	= 0 ;
+var resLoaded	= 0 ;
+var resLoadingComplete = false ;
 
 // App
 var app ;
@@ -62,33 +76,39 @@ function createEngine()
 	
 	var title	= document.createElement('title') ;
 	title.innerHTML = data['app']['name'] ;
-	document.getElementsByTagName("head")[0].appendChild(title) ;
+	document.head.appendChild(title) ;
 	
 	var defaultCSS	= document.createElement('style') ;
 	defaultCSS.innerHTML = 'canvas { margin-left : -8px ; margin-top : -8px ;}' ;
 	
-	//document.getElementsByTagName("head")[0].appendChild(defaultCSS) ;
 	document.head.appendChild(defaultCSS) ;
 	
 	var scriptFiles = data['engine']['pluginfiles'] ;
-	var scripts = scriptFiles.length ;
+	totalScripts = scriptFiles.length ;
 	
-	for(var i = 0; i < scripts; i++)
+	for(var i = 0; i < totalScripts; i++)
 	{
 		var script	= document.createElement('script') ;
 		script.setAttribute('type','text/javascript') ;
 		script.setAttribute('src' ,scriptFiles[i]) ;
-	
-		//document.getElementsByTagName("head")[0].appendChild(script) ;
+		
+		//alert(scriptFiles[i]) ;
+		script.onload = scriptLoadCounter ;
 		document.head.appendChild(script) ;
 	}
 	
-	script.onload = createApp ;
+	engine['keyDown']	['active']	= false ;
+	engine['mouseDown']	['active']	= false ;
 }
 
 function scriptLoadCounter()
 {
+	scriptLoaded++ ;
 	
+	if(scriptLoaded == totalScripts)
+	{
+		createApp() ;
+	}
 }
 
 function updateEngine()
@@ -119,6 +139,9 @@ function hideConsole()
 
 function createApp()
 {	
+	consoleDiv = document.createElement('div') ;
+	consoleDiv.innerHTML = 'hello console user!' ;
+	
 	// Filling global variables
 	
 	if(data[app]['x'] != undefined)
@@ -192,12 +215,14 @@ function createApp()
 	var videos = new Array() ;
 	data[app]['videos'] = videos ;
 	
-	// Initializing Pages
+	// Initializing Pages and Layers
 	
 	for(var i = 0; i < pages.length;i++)
 	{
 		createPage(pages[i]) ;
 	}
+	
+	//alert('hello1') ;
 	
 	// Starting Timer
 	appTickTime = 1000 / appMaxFrameRate ;
@@ -205,11 +230,7 @@ function createApp()
 	
 	date 	= new Date();
 	appStartTime= date.getTime();
-	
 	getPage(appCurrentPage) ;
-	
-	consoleDiv = document.createElement('div') ;
-	consoleDiv.innerHTML = 'hello console user!' ;
 	
 	showConsole() ;
 	
@@ -231,11 +252,21 @@ function updateApp()
 		drawApp() ;
 	}
 	
+	if(engine['keyDown']['active'] == true)
+	{
+		engine['keyDown']['active']	= 'repeated' ;
+	}
+	
 	engine['keyPress']['key']	= undefined ;
 	engine['keyPress']['active']= false ;
 	
 	engine['keyUp']['key']		= undefined ;
 	engine['keyUp']['active']	= false ;
+	
+	engine['touchLayer'] = undefined ;
+	engine['touchLayerPart'] = undefined ;
+	
+	//consoleDiv.innerHTML = totalRes + ' ' + resLoaded ;
 }
 
 function drawApp()
@@ -271,92 +302,108 @@ function deleteApp()
 // PAGE CODE
 function createPage(page)
 {
-	// Initializing Layers
-	layers = data[page]['layers'] ;
-	
-	for(var i = 0; i < layers.length;i++)
-	{
-		createLayer(layers[i]) ;
-	}
+	var type = data[page]['type'] ;
+	engine[type]['createPage'](page) ;
 }
 
 // Sets the page given in the parameter as the current page in the app 
-function getPage(page)
+function getPage(page, state)
 {
-	data[app]['currentPage']= page ;
-	appCurrentPage			= page ;
-	appCurrentPageLayers	= data[page]['layers'] ;
+	var type = data[page]['type'] ;
 	
-	data[page]['state'] 	= data[page]['defaultState'] ;
-	
-	data[page]['startTime']	= date.getTime() ;
-	data[page]['updateCounter']	= 0 ;
+	data[page]['state'] = state ;
+
+	engine[type]['getPage'](page) ;
 }
 
 function updatePage(page)
-{
-	code[page]['update']() ;
-	
-	// Getting Layers and drawing them
-	var layers = data[page]['layers'] ;
-	
-	for(var i = 0; i < layers.length;i++)
-	{
-		updateLayer(layers[i]) ;
-	}
-	
-	data[page]['time']		= date.getTime() - data[page]['startTime'];
-	data[page]['updateCounter']	= data[page]['updateCounter'] + 1 ;
+{	
+	var type = data[page]['type'] ;
+
+	engine[type]['updatePage'](page) ;
 }
 
 function drawPage(page)
 {
-	// Getting Layers and drawing them
-	var layers = data[page]['layers'] ;
+	var type = data[page]['type'] ;
 	
-	for(var i = 0; i < layers.length;i++)
-	{
-		drawLayer(layers[i]) ;
-	}
+	engine[type]['drawPage'](page) ;
 }
 
 function deletePage()
 {
-	
+	var type = data[page]['type'] ;
+
+	engine[type]['deletePage'](page) ;
 }
 
 // LAYER CODE
 function createLayer(layer)
 {	
-	type = data[layer]['type'] ;
+	if(data[layer]['created'] != true)
+	{	
+		var type = data[layer]['type'] ;
 	
-	// Calling createLayer function in specific layer plugin
+		//alert(type + ' ' + data['engine'][type]) ;
+		// Calling createLayer function in specific layer plugin
+		data['engine'][type]['createLayer'](layer) ;
 	
-	data['engine'][type]['createLayer'](layer) ;
+		data[layer]['created'] = true ;
+		
+		// consoleDiv.innerHTML = consoleDiv.innerHTML + '</br>' + layer ;
+	}
 }
 
-function getLayer()
+function getLayer(layer)
 {
+	var type = data[layer]['type'] ;
 	
+	// Calling getLayer function in specific layer plugin
+	data['engine'][type]['getLayer'](layer) ;
 }
 
 function updateLayer(layer)
 {
-	if(code[layer] != undefined)
+	var type	= data[layer]['type'] ;
+	var visible	= data[layer]['visible'] ;
+	
+	if(visible == true)
 	{
-		if(code[layer]['update'] != undefined)
+		if(code[layer] != undefined)
 		{
-			code[layer]['update']() ;
+			if(code[layer]['update'] != undefined)
+			{
+				code[layer]['update']() ;
+			}
+		}
+		
+		if(type == 'ui.layer.image.animation')
+		{
+			data['engine'][type]['updateLayer'](layer) ;
+		}
+		else if(type == 'ui.layer.advanced.group')
+		{
+			data['engine'][type]['updateLayer'](layer) ;
 		}
 	}
-	
-	var type	= data[layer]['type'] ;
-	
+		
 	if(type == 'ui.layer.text.html')
 	{
 		data['engine'][type]['updateLayer'](layer) ;
 	}
-	else if(type == 'ui.layer.image.animation')
+	else if(type == 'ui.layer.image.animation.array')
+	{
+		if(code[layer] != undefined)
+		{
+			if(code[layer]['update'] != undefined)
+			{
+				code[layer]['update']() ;
+			}
+		}
+		
+		data['engine'][type]['updateLayer'](layer) ;
+	}
+	else if(type == 'ui.layer.audio')
 	{
 		data['engine'][type]['updateLayer'](layer) ;
 	}
@@ -366,17 +413,25 @@ function drawLayer(layer)
 {
 	var type	= data[layer]['type'] ;
 	var visible	= data[layer]['visible'] ;
-
+	
 	// Calling drawLayer function in specific layer plugin
 	if(visible == true)
-	{	
+	{
+		data['engine'][type]['drawLayer'](layer) ;
+	}
+	
+	if(type == 'ui.layer.image.animation.array')
+	{
 		data['engine'][type]['drawLayer'](layer) ;
 	}
 }
 
-function deleteLayer()
+function deleteLayer(layer)
 {
+	var type = data[layer]['type'] ;
 	
+	// Calling deleteLayer function in specific layer plugin
+	data['engine'][type]['deleteLayer'](layer) ;
 }
 
 // LAYER PART CODE
@@ -403,17 +458,46 @@ function getTouchLayer(xx, yy)
 	
 	for(var i = layersSize - 1; i >= 0; i--)
 	{	
+		//consoleDiv.innerHTML = consoleDiv.innerHTML + '</br>' + appCurrentPageLayers[i] ;
+		//alert('a ' + appCurrentPageLayers[i]) ;
+		
+		var visible	= data[appCurrentPageLayers[i]]['visible'] ;
+		
 		var x		= data[appCurrentPageLayers[i]]['x'] ;
 		var y		= data[appCurrentPageLayers[i]]['y'] ;
 		var width	= data[appCurrentPageLayers[i]]['width'] ;
 		var height	= data[appCurrentPageLayers[i]]['height'] ;
 		
-		// alert(appCurrentPageLayers[i] + ' xx ' + xx + ' yy ' + yy + ' x ' + x + ' y ' + y + ' width ' + width + ' height ' + height) ;
-		
-		if(x < xx && x + width > xx && y < yy && y + height > yy)
+		if(visible == true && x < xx && x + width > xx && y < yy && y + height > yy)
 		{
 			engine['touchLayer'] = appCurrentPageLayers[i] ;
-			// alert(engine['touchLayer']) ;
+			
+			var layerType = data[engine['touchLayer']]['type'] ;
+			//alert('touchLayer ' + engine['touchLayer']) ;
+			
+			if(layerType == 'ui.layer.advanced.group')
+			{
+				var layers = data[engine['touchLayer']]['layers'] ;
+				
+				for(var j = layers.length - 1; j >= 0; j--)
+				{
+					var visible	= data[layers[j]]['visible'] ;
+		
+					var x		= data[layers[j]]['x'] + data[layers[j]]['xShift'] ;
+					var y		= data[layers[j]]['y'] + data[layers[j]]['yShift'] ;
+					var width	= data[layers[j]]['width'] ;
+					var height	= data[layers[j]]['height'] ;
+					
+					if(visible == true && x < xx && x + width > xx && y < yy && y + height > yy)
+					{
+						engine['touchLayerPart'] = layers[j] ;
+						//alert() ;
+						return ;
+					}
+				}
+			}
+			//consoleDiv.innerHTML = consoleDiv.innerHTML + ' ' + engine['touchLayer'] ; 
+			
 			return ;
 		}
 	}
@@ -486,8 +570,22 @@ function mouseDown(e)
 
 function mouseUp(e)
 {
-	engine['mouseUp']['active']	= true ;
+	// Clearing mouseDown values
+	engine['mouseDown']['active']	= false ;
 	
+	engine['mouseDown']['screenX']	= undefined ;
+	engine['mouseDown']['screenX']	= undefined ;
+	
+	engine['mouseDown']['clientX']	= undefined ;
+	engine['mouseDown']['clientY']	= undefined ;
+	
+	engine['mouseDown']['ctrlKey']	= undefined ;
+	engine['mouseDown']['shiftKey']	= undefined ;
+	engine['mouseDown']['altKey']	= undefined ;
+	
+	engine['mouseDown']['button']	= undefined ;
+	
+	// mouseUp Values
 	engine['mouseUp']['screenX']	= e.screenX ;
 	engine['mouseUp']['screenX']	= e.screenY ;
 	
@@ -600,6 +698,7 @@ function keyPress(e)
 	}
 	
 	engine['keyPress']['key']	= key ;
+	// consoleDiv.innerHTML = 'keyPress ' + e ;
 }
 
 function keyUp(e)
@@ -620,7 +719,7 @@ function keyUp(e)
 }
 
 window.onkeydown	= keyDown ;
-//window.onkeypress	= keyPress ;
+window.onkeypress	= keyPress ;
 window.onkeyup		= keyUp ;
 
 // TOUCH INPUT CODE
@@ -706,73 +805,157 @@ function gestureShake()
 //window.onscroll ;	The event occurs when a document view is scrolled
 
 // GAMING RELATED CODE
-function collision(layer1, layer2)
-{
-	if(data[layer1]['visible'] == false)
+function boundingBoxCollision(x1, y1, w1, h1, x2, y2, w2, h2)
+{		
+	//alert('A ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
+	//alert('B ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
+	//alert('C ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
+	//alert('D ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
+	
+		 if(x2 		> x1 && x2		< x1 + w1 && y2 	> y1 && y2		< y1 + h1)
 	{
-		return ;
-	}
-	
-	var x1 = data[layer1]['x'] ;
-	var y1 = data[layer1]['y'] ;
-	var w1 = data[layer1]['width'] ;
-	var h1 = data[layer1]['height'] ;
-	
-	var x2 = data[layer2]['x'] ;
-	var y2 = data[layer2]['y'] ;
-	var w2 = data[layer2]['width'] ;
-	var h2 = data[layer2]['height'] ;
-	
-	// alert(layer1 + ' ' + x1 + ' ' +  y1 + ' ' + w1 + ' ' + h1 + ' ' + layer2 + ' ' + x2 + ' ' +  y2 + ' ' + w2 + ' ' + h2) ;
-	
-	
-	if(x2 > x1 && x2 < x1 + w1 && y2 > y1 && y2 < y1 + h1)
-	{
+		
 		return true ;
 	}
-	else if(x2 + w2 > x1 && x2 + w2 < x1 + w1 && y2 > y1 && y2 < y1 + h1)
+	else if(x2 + w2 > x1 && x2 + w2 < x1 + w1 && y2 	> y1 && y2		< y1 + h1)
 	{
+		
 		return true ;
 	}
-	else if(x2 > x1 && x2 < x1 + w1 && y2 + h2> y1 && y2  + h2< y1 + h1)
+	else if(x2 		> x1 && x2 		< x1 + w1 && y2 + h2> y1 && y2 + h2	< y1 + h1)
 	{
+		
 		return true ;
 	}
-	else if(x2 + w2 > x1 && x2 + w2 < x1 + w1 && y2 + h2 > y1 && y2 + h2 < y1 + h1)
+	else if(x2 + w2 > x1 && x2 + w2 < x1 + w1 && y2 + h2> y1 && y2 + h2 < y1 + h1)
 	{
+		
 		return true ;
 	}
 	else
 	{
+		//alert('E ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
 		return false ;
 	}
 }
 
-function checkCollision(layer1, layer2)
+function check2DCollision(visible1, visible2, x1, y1, w1, h1, x2, y2, w2, h2)
 {
-	if(collision(layer1, layer2) == true)
+	if(visible1 == false || visible2 == false)
 	{
-		return true ;
+		return ;
 	}
-	else if(collision(layer2,layer1) == true)
-	{
-		return true ;
-	}
-}
-
-function checkBulkCollisions(layer,layers)
-{
-	// consoleDiv.innerHTML = layer + layers ;
 	
-	for(var i = 0; i < layers.length;i++)
-	{	
-		if(checkCollision(layer, layers[i]) == true)
-		{
-			return layers[i] ;
-		}
+	//alert(visible1 + ' '+ visible2 + ' ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
+	
+	if(boundingBoxCollision(x1, y1, w1, h1, x2, y2, w2, h2) == true)
+	{
+		return true ;
+	}
+	else if(boundingBoxCollision(x2, y2, w2, h2, x1, y1, w1, h1) == true)
+	{
+		return true ;
 	}
 	
 	return false ;
+}
+
+function checkLayerCollision(layer1, layer2)
+{			
+	var v1 = data[layer1]['visible']	;
+	var x1 = data[layer1]['x']		;
+	var y1 = data[layer1]['y']		;
+	var w1 = data[layer1]['width']	;
+	var h1 = data[layer1]['height']	;
+			
+	var v2 = data[layer2]['visible']	;
+	var x2 = data[layer2]['x']		;
+	var y2 = data[layer2]['y']		;
+	var w2 = data[layer2]['width']	;
+	var h2 = data[layer2]['height']	;
+	
+	return check2DCollision(v1, v2, x1, y1, w1, h1, x2, y2, w2, h2) ;
+}
+
+// layer can be of type ui.layer.image.animation.array or some other type
+// layers can not contain any layer which is of type ui.layer.image.animation.array
+function checkLayerCollisions(layer,layers)
+{
+	if(data[layer]['type'] == 'ui.layer.image.animation.array')
+	{
+		var size = data[layer]['size'] ;
+		
+		for(var i = 0; i < size; i++)
+		{
+			var v1,x1,y1,w1,h1 ;
+			
+			v1 = data[layer]['visible'][i] ;
+			x1 = data[layer]['x'][i] ;
+			y1 = data[layer]['y'][i] ;
+			w1 = data[layer]['width'][i] ;
+			h1 = data[layer]['height'][i] ;
+			
+			for(var j = 0; j < layers.length;j++)
+			{
+				var v2,x2,y2,w2,h2 ;
+				
+				v2 = data[layers[j]]['visible'] ;
+				x2 = data[layers[j]]['x'] ;
+				y2 = data[layers[j]]['y'] ;
+				w2 = data[layers[j]]['width'] ;
+				h2 = data[layers[j]]['height'] ;
+				
+				if(check2DCollision(v1, v2, x1, y1, w1, h1, x2, y2, w2, h2) == true)
+				{
+					return {'layer1':layer, 'layer1Index' : i ,'layer2':layers[j]} ;
+				}
+			}
+		}
+	}
+	else
+	{
+		var v1,x1,y1,w1,h1 ;
+		
+		v1 = data[layer]['visible'] ;
+		x1 = data[layer]['x'] ;
+		y1 = data[layer]['y'] ;
+		w1 = data[layer]['width'] ;
+		h1 = data[layer]['height'] ;
+		
+		for(var j = 0; j < layers.length;j++)
+		{
+			var v2,x2,y2,w2,h2 ;
+			
+			v2 = data[layers[j]]['visible'] ;
+			x2 = data[layers[j]]['x'] ;
+			y2 = data[layers[j]]['y'] ;
+			w2 = data[layers[j]]['width'] ;
+			h2 = data[layers[j]]['height'] ;
+			
+			if(check2DCollision(v1, v2, x1, y1, w1, h1, x2, y2, w2, h2) == true)
+			{
+				return {'layer1':layer, 'layer2':layers[j]} ;
+			}
+		}
+	}
+	
+	return undefined ;
+}
+
+// Resource Loading
+function resourceLoaded()
+{
+	resLoaded++ ;
+	
+	if(resLoaded == totalRes)
+	{
+		engine['resourcesLoaded'] = true ;
+	}
+}
+
+function getRandomInteger(from, to)
+{
+	return Math.floor((Math.random() * to) + from);
 }
 
 /////////////////////////

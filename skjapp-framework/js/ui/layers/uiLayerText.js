@@ -38,7 +38,28 @@ var draw_ui_layer_text = function drawUILayerText(layer)
 		ctx.font = font ;
 	}
 	
-	ctx.strokeText(text,x,y) ;
+	ctx.textBaseline = 'top' ;
+	
+	if(ctx.measureText(text).width != undefined)
+	{
+		data[layer]['width'] = ctx.measureText(text).width ;
+	}
+	
+	// Code for xShift and yShift
+	var xShift = data[layer]['xShift'] ;
+	var yShift = data[layer]['yShift'] ;
+	
+	if(xShift == undefined)
+	{
+		xShift = 0 ;
+	}
+	
+	if(yShift == undefined)
+	{
+		yShift = 0 ;
+	}
+	
+	ctx.strokeText(text,x + xShift,y + yShift) ;
 	ctx.strokeStyle = 'rgb(0,0,0)' ;
 }
 
@@ -84,6 +105,8 @@ var create_ui_layer_text_css = function createUILayerTextCSS(layer)
 	div1.style.color		= color ;
 	div1.style.font			= font ;
 	
+	// div1.style.backgroundColor = 'red' ;
+	
 	var visible	= data[layer]['visible'] ;
 	
 	if(visible == true)
@@ -128,9 +151,23 @@ var draw_ui_layer_text_css = function drawUILayerTextCSS(layer)
 	
 	var div1				= data[layer]['div'] ;
 	
+	// Code for xShift and yShift
+	var xShift = data[layer]['xShift'] ;
+	var yShift = data[layer]['yShift'] ;
+	
+	if(xShift == undefined)
+	{
+		xShift = 0 ;
+	}
+	
+	if(yShift == undefined)
+	{
+		yShift = 0 ;
+	}
+	
 	div1.innerHTML			= text ;
-	div1.style.left			= x + 'px' ;
-	div1.style.top			= y + 'px';
+	div1.style.left			= (x + xShift) + 'px';
+	div1.style.top			= (y + yShift) + 'px';
 	div1.style.width		= width + 'px' ;
 	div1.style.height		= height + 'px' ;
 	div1.style.color		= color ;

@@ -1,95 +1,66 @@
 /////////////////////////
-///// SHAPE : LINE	/////
+///// AUDIO : BASIC	/////
 /////////////////////////
 
-var create_ui_layer_shape_line = function createUILayerShapeLine(layer)
+var create_ui_layer_audio = function createUILayerAudio(layer)
+{
+	var audio	= document.createElement('audio') ;
+	
+	var sourceSize = data[layer]['src'].length ;
+	
+	for(var i = 0; i < sourceSize; i++)
+	{
+		var source		= document.createElement('source') ;
+	
+		var sourceSrc	= data[layer]['src'][i] ;
+		source.setAttribute('src' ,sourceSrc) ;
+		
+		var sourceType	= data[layer]['srcType'][i] ;
+		source.setAttribute('type' ,sourceType) ;
+		
+		audio.appendChild(source) ;
+	}
+	
+	audio.setAttribute('preload' ,"auto") ;
+	document.body.appendChild(audio) ;
+	
+	data[layer]['audio'] = audio ;
+} ;
+
+var get_ui_layer_audio = function getUILayerAudio(layer)
 {
 	
 } ;
 
-var get_ui_layer_shape_line = function getUILayerShapeLine()
+var update_ui_layer_audio = function updateUILayerAudio(layer)
 {
+	var audio = data[layer]['audio'] ;
 	
-}
-
-var update_ui_layer_shape_line = function updateUILayerShapeLine()
-{
+	var state = data[layer]['state'] ;
 	
-}
-
-var draw_ui_layer_shape_line = function drawUILayerShapeLine(layer)
-{
-	x		= data[layer]['x'] ;
-	y		= data[layer]['y'] ;
-	endX	= data[layer]['endX'] ;
-	endY	= data[layer]['endY'] ;
-			
-	// Drawing a simple line
-	ctx.beginPath() ;			
-	ctx.moveTo(x,y) ;			// Starting point of line 
-	ctx.lineTo(endX,endY) ;		// Ending point of line
-	ctx.closePath() ;
-	ctx.stroke() ;				// Drawing the above coded path
-}
-
-var delete_ui_layer_shape_line = function deleteUILayerShapeLine()
-{
-	
-}
-
-
-data['engine']['ui.layer.shape.line'] = 
-{
-	'createLayer'	: create_ui_layer_shape_line 	,
-	'getLayer'		: get_ui_layer_shape_line		,
-	'updateLayer'	: update_ui_layer_shape_line	,
-	'drawLayer'		: draw_ui_layer_shape_line		,
-	'deleteLayer'	: delete_ui_layer_shape_line
+	if(state == 'play' && audio != undefined)
+	{
+		audio.volume = data[layer]['volume'] ;
+		audio.play() ;
+		data[layer]['state'] = undefined ;
+	}
 } ;
 
-
-/////////////////////////
-///SHAPE : RECTANGLE/////
-/////////////////////////
-
-var create_ui_layer_shape_rectangle = function createUILayerShapeRectangle(layer)
+var draw_ui_layer_audio = function drawUILayerAudio(layer)
 {
 	
 } ;
 
-var get_ui_layer_shape_rectangle = function getUILayerShapeRectangle()
+var delete_ui_layer_audio = function deleteUILayerAudio(layer)
 {
 	
-}
+} ;
 
-var update_ui_layer_shape_rectangle = function updateUILayerShapeRectangle()
+data['engine']['ui.layer.audio'] = 
 {
-	
-}
-
-var draw_ui_layer_shape_rectangle = function drawUILayerShapeRectangle(layer)
-{
-	x		= data[layer]['x'] ;
-	y		= data[layer]['y'] ;
-	width	= data[layer]['width'] ;
-	height	= data[layer]['height'] ;
-			
-	// Drawing a simple line			
-	ctx.rect(x,y,width,height) ; 
-	ctx.stroke() ;				// Drawing the above coded path
-}
-
-var delete_ui_layer_shape_rectangle = function deleteUILayerShapeRectangle()
-{
-	
-}
-
-
-data['engine']['ui.layer.shape.rectangle'] = 
-{
-	'createLayer'	: create_ui_layer_shape_rectangle 	,
-	'getLayer'		: get_ui_layer_shape_rectangle		,
-	'updateLayer'	: update_ui_layer_shape_rectangle	,
-	'drawLayer'		: draw_ui_layer_shape_rectangle		,
-	'deleteLayer'	: delete_ui_layer_shape_rectangle
+	'createLayer'	: create_ui_layer_audio 	,
+	'getLayer'		: get_ui_layer_audio		,
+	'updateLayer'	: update_ui_layer_audio		,
+	'drawLayer'		: draw_ui_layer_audio		,
+	'deleteLayer'	: delete_ui_layer_audio
 } ;

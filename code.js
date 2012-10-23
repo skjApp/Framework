@@ -1,16 +1,22 @@
+// App's Code
+
 var code =
 {
 	'loading_page'	:
 	{
 		'update' : function()
 		{
-			if(data['LoadingBarFilling']['width'] < 191)
+			if(data['LoadingBarFilling']['width'] == 191)
+			{
+				getPage('EnableSound') ;
+			}
+			else if(data['LoadingBarFilling']['width'] < 190)
 			{
 				data['LoadingBarFilling']['width']++ ;
 			}
-			else
+			else if(engine['resourcesLoaded'] == true)
 			{
-				getPage('EnableSound') ;
+				data['LoadingBarFilling']['width']++ ;
 			}
 		}
 	},
@@ -18,7 +24,7 @@ var code =
 	'EnableSound'	:
 	{
 		'update' : function()
-		{	
+		{
 			if(engine['touchLayer'] == 'Yes')
 			{
 				getPage('Splash') ;
@@ -35,9 +41,11 @@ var code =
 	{
 		'update' : function()
 		{
+			//consoleDiv.innerHTML = data['Splash']['time'] ;
+			
 			if(data['Splash']['time'] > 1000)
 			{
-				getPage('Menu') ;
+				getPage('Menu','NewGame') ;
 			}
 		}
 	},
@@ -75,12 +83,15 @@ var code =
 				
 				if(engine['keyDown']['key'] == KEY_ENTER)
 				{
-					getPage('Stage1') ;
+					data['Player']['score'] = 0 ;
+					data['Player']['life']  = 3 ;
+					data['Player']['balloons']  = 99 ;
+					getPage('Stage1','active') ;
 				}
-				else if(engine['keyDown']['key'] == KEY_DOWN)
+				else if(engine['keyDown']['key'] == KEY_DOWN && engine['keyDown']['active'] == true)
 				{
 					data['Menu']['state'] = 'AboutUs' ;
-				}				
+				}	
 			}
 			else if(data['Menu']['state'] == 'AboutUs')
 			{
@@ -90,7 +101,7 @@ var code =
 				data['MenuOptionHelpText']['currentFrame'] = 0 ;
 				data['MenuOptionExitText']['currentFrame'] = 0 ;
 				
-				if(engine['keyDown']['key'] == KEY_UP)
+				if(engine['keyDown']['key'] == KEY_UP && engine['keyDown']['active'] == true)
 				{
 					data['Menu']['state'] = 'NewGame' ;
 				}
@@ -98,7 +109,7 @@ var code =
 				{
 					getPage('AboutUs') ;
 				}
-				else if(engine['keyDown']['key'] == KEY_DOWN)
+				else if(engine['keyDown']['key'] == KEY_DOWN && engine['keyDown']['active'] == true)
 				{
 					data['Menu']['state'] = 'Help' ;
 				}				
@@ -111,7 +122,7 @@ var code =
 				data['MenuOptionHelpText']['currentFrame'] = 1 ;
 				data['MenuOptionExitText']['currentFrame'] = 0 ;
 				
-				if(engine['keyDown']['key'] == KEY_UP)
+				if(engine['keyDown']['key'] == KEY_UP && engine['keyDown']['active'] == true)
 				{
 					data['Menu']['state'] = 'AboutUs' ;
 				}
@@ -119,7 +130,7 @@ var code =
 				{
 					getPage('Help1') ;
 				}
-				else if(engine['keyDown']['key'] == KEY_DOWN)
+				else if(engine['keyDown']['key'] == KEY_DOWN && engine['keyDown']['active'] == true)
 				{
 					data['Menu']['state'] = 'Exit' ;
 				}		
@@ -132,7 +143,7 @@ var code =
 				data['MenuOptionHelpText']['currentFrame'] = 0 ;
 				data['MenuOptionExitText']['currentFrame'] = 1 ;
 				
-				if(engine['keyDown']['key'] == KEY_UP)
+				if(engine['keyDown']['key'] == KEY_UP && engine['keyDown']['active'] == true)
 				{
 					data['Menu']['state'] = 'Help' ;
 				}
@@ -149,35 +160,29 @@ var code =
 		'update' : function()
 		{
 			data['AboutUsText']['visible'] = true ;
-			updateLayer('AboutUsText') ;
 			
 			if(engine['touchLayer'] == 'Back')
 			{
 				data['AboutUsText']['visible'] = false ;
-				updateLayer('AboutUsText') ;
 				getPage('Menu') ;
 			}
 		}
 	},
-
 	
 	'Help1'	:
 	{
 		'update' : function()
 		{
 			data['Help1Text']['visible'] = true ;
-			updateLayer('Help1Text') ;
 			
 			if(engine['touchLayer'] == 'Next')
 			{
 				data['Help1Text']['visible'] = false ;
-				updateLayer('Help1Text') ;
 				getPage('Help2') ;
 			}
 			else if(engine['touchLayer'] == 'Back')
 			{
 				data['Help1Text']['visible'] = false ;
-				updateLayer('Help1Text') ;
 				getPage('Menu') ;
 			}
 		}
@@ -188,14 +193,15 @@ var code =
 		'update' : function()
 		{	
 			data['Help2Text']['visible'] = true ;
-			updateLayer('Help2Text') ;
 			
 			if(engine['touchLayer'] == 'MenuBlueText')
 			{
+				data['Help2Text']['visible'] = false ;
 				getPage('Menu') ;
 			}
 			else if(engine['touchLayer'] == 'Back')
 			{
+				data['Help2Text']['visible'] = false ;
 				getPage('Help1') ;
 			}
 		}
@@ -219,163 +225,36 @@ var code =
 	'Stage1'	:
 	{
 		'update' : function()
-		{
-			// consoleDiv.innerHTML = consoleDiv.innerHTML + ' : ' + data['Stage1']['updateCounter'] + ' ' + data['Stage1']['time']  ;
+		{	
+			if(data['Stage1']['state'] == 'chanceOver')	// Chance Over
+			{
+				data['PopupScoreTextValue']['text']			= data['Player']['score'] ;
+				data['ChanceOverLifeTextValue']	['text']	= data['Player']['life'] ;
+			}
+
+			else if(data['Stage1']['state'] == 'stageOver')
+			{
+				data['PopupScoreTextValue']['text']			= data['Player']['score'] ;
+				data['ChanceOverLifeTextValue']	['text']	= data['Player']['life'] ;
+			}
 			
-			if(data['Stage1']['updateCounter'] == 0)
-			{	
-				data['BackgroundSky']['x'] = 0 ;
-				data['BackgroundSky']['y'] = 0 ;
+			// Game Over
+			else if(data['Stage1']['state'] == 'gameOver')
+			{
+				data['PopupScoreTextValue']['text']	= data['Player']['score'] ;
 				
-				data['Player']['x'] = 108 ;
-				data['Player']['y'] = 6 ;
-			}
-
-			else if(data['Stage1']['updateCounter'] == 150)
-			{
-				data['Businessman-Right']['visible']= true ;
-				data['Businessman-Right']['state']	= 'walk' ;
-				data['Businessman-Right']['x']		= -51 ;
-				data['Businessman-Right']['y']		= 250 ;
-			}
-			
-			else if(data['Stage1']['updateCounter'] == 300)
-			{
-				data['Girl1-Left']['visible']	= true ;
-				data['Girl1-Left']['state']		= 'walk' ;
-				data['Girl1-Left']['x']			= 240 ;
-				data['Girl1-Left']['y']			= 234 ;
+				data['GameOverPopup']['visible']			= true ;
 				
-				// data['Points20']['visible']		= true ;
-				// data['Points20']['state']		= 'active' ;
-				// updateLayer('Points20') ;
-			}
-			
-			else if(data['Stage1']['updateCounter'] == 450)
-			{
-				data['Skateboy-Right']['visible']	= true ;
-				data['Skateboy-Right']['state'] = 'walk' ;
-				data['Skateboy-Right']['x']		= -47 ;
-				data['Skateboy-Right']['y']		= 244 ;
-			}
-			
-			else if(data['Stage1']['updateCounter'] == 600)
-			{
-				data['Girl2-Right']['visible']		= true ;
-				data['Girl2-Right']['state'] 		= 'walk' ;
-				data['Girl2-Right']['x']			= -26 ;
-				data['Girl2-Right']['y']			= 233 ;
+				data['Player']['state'] = 'cry' ;	
 			}
 
-			else if(data['Stage1']['updateCounter'] == 750)
-			{
-				data['Ambulance-Left']['visible']	= true ;
-				data['Ambulance-Left']['state'] 	= 'walk' ;
-				data['Ambulance-Left']['x']			= 240 ;
-				data['Ambulance-Left']['y']			= 228 ;
-			}
-
-			else if(data['Stage1']['updateCounter'] == 900)
-			{
-				data['Businessman-Right']['visible']= true ;
-				data['Businessman-Right']['state']	= 'walk' ;
-				data['Businessman-Right']['x']		= -51 ;
-				data['Businessman-Right']['y']		= 235 ;
-			}
-			
-			else if(data['Stage1']['updateCounter'] == 1050)
-			{
-				data['Bird-Right']['visible']	= true ;
-				data['Bird-Right']['state'] 	= 'walk' ;
-				data['Bird-Right']['x']			= -66;
-				data['Bird-Right']['y']			= 180 ;
-			}
-
-			else if(data['Stage1']['updateCounter'] == 1200)
-			{
-				data['Girl1-Right']['visible']		= true ;
-				data['Girl1-Right']['state'] 		= 'walk' ;
-				data['Girl1-Right']['x']			= -34 ;
-				data['Girl1-Right']['y']			= 234 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 1350)
+			// active
+			else if(data['Stage1']['state'] == 'active')
 			{				
-				data['Skateboy-Left']['visible']	= true ;				
-				data['Skateboy-Left']['state'] 		= 'walk' ;
-				data['Skateboy-Left']['x']			= 240 ;
-				data['Skateboy-Left']['y']			= 244 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 1500)
-			{				
-				data['Bird-Right']['visible']	= true ;				
-				data['Bird-Right']['state'] 	= 'walk' ;
-				data['Bird-Right']['x']			= -66 ;
-				data['Bird-Right']['y']			= 150 ;
-			}
-
-			else if(data['Stage1']['updateCounter'] == 1650)
-			{				
-				data['Businessman-Left']['visible']		= true ;				
-				data['Businessman-Left']['state'] 		= 'walk' ;
-				data['Businessman-Left']['x']			= 240 ;
-				data['Businessman-Left']['y']			= 250 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 650)
-			{				
-				data['WindowBoy']['visible']	= true ;				
-				data['WindowBoy']['state'] 		= 'walk' ;
-				data['WindowBoy']['x']			= 10 ;
-				data['WindowBoy']['y']			= 87 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 1950)
-			{				
-				data['Girl2-Left']['visible']	= true ;				
-				data['Girl2-Left']['state'] 	= 'walk' ;
-				data['Girl2-Left']['x']			= 240 ;
-				data['Girl2-Left']['y']			= 233 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 2100)
-			{				
-				data['Girl1-Left']['visible']	= true ;				
-				data['Girl1-Left']['state'] 	= 'walk' ;
-				data['Girl1-Left']['x']			= 240 ;
-				data['Girl1-Left']['y']			= 234 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 2250)
-			{				
-				data['Skateboy-Right']['visible']	= true ;				
-				data['Skateboy-Right']['state'] 	= 'walk' ;
-				data['Skateboy-Right']['x']			= -47 ;
-				data['Skateboy-Right']['y']			= 244 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 2400)
-			{				
-				data['Ambulance-Left']['visible']	= true ;				
-				data['Ambulance-Left']['state'] 	= 'walk' ;
-				data['Ambulance-Left']['x']			= 240 ;
-				data['Ambulance-Left']['y']			= 228 ;
-			}
-
-			else if(data['Stage1']['updateCounter'] == 2550)
-			{				
-				data['Bird-Left']['visible']	= true ;				
-				data['Bird-Left']['state'] 		= 'walk' ;
-				data['Bird-Left']['x']			= 240 ;
-				data['Bird-Left']['y']			= 200 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 2700)
-			{				
-				data['Businessman-Right']['visible']= true ;
-				data['Businessman-Right']['state']	= 'walk' ;
-				data['Businessman-Right']['x']		= -51 ;
-				data['Businessman-Right']['y']		= 250 ;
-			}
-			else if(data['Stage1']['updateCounter'] == 2850)
-			{				
-				data['Girl2-Left']['visible']	= true ;				
-				data['Girl2-Left']['state'] 	= 'walk' ;
-				data['Girl2-Left']['x']			= 240 ;
-				data['Girl2-Left']['y']			= 231 ;
+				if(data['Stage1']['updateCounter'] == 4200)
+				{
+					getPage('Stage1','stageOver') ;
+				}
 			}
 		}
 	},
@@ -384,327 +263,698 @@ var code =
 	{
 		'update' : function()
 		{
-			if(data['Stage2']['updateCounter'] == 0)
-			{	
-				data['BackgroundSky']['x'] = 0 ;
-				data['BackgroundSky']['y'] = 0 ;
-
-				data['Player']['x'] = 108 ;
-				data['Player']['y'] = 6 ;
-
-			}
-
-			else if(data['Stage2']['updateCounter'] == 150)
+			if(data['Stage2']['state'] == 'chanceOver')	// Chance Over
 			{
-				data['Girl1-Right']['visible']		= true ;
-				data['Girl1-Right']['state'] 		= 'walk' ;
-				data['Girl1-Right']['x']			= -34 ;
-				data['Girl1-Right']['y']			= 234 ;
+				data['PopupScoreTextValue']['text']	= data['Player']['score'] ;
+				data['ChanceOverLifeTextValue']	['text']	= data['Player']['life'] ;
 			}
-
-			else if(data['Stage2']['updateCounter'] == 300)
-			{
-				data['Businessman-Right']['visible']= true ;
-				data['Businessman-Right']['state']	= 'walk' ;
-				data['Businessman-Right']['x']		= -51 ;
-				data['Businessman-Right']['y']		= 250 ;
-			}
-		
-			else if(data['Stage2']['updateCounter'] == 450)
-			{
-				data['Bird-Right']['visible']	= true ;
-				data['Bird-Right']['state'] 	= 'walk' ;
-				data['Bird-Right']['x']			= -66;
-				data['Bird-Right']['y']			= 180 ;
-			}
-
-			else if(data['Stage1']['updateCounter'] == 105)
-			{
-				data['SadhuBaba-Left']['visible']	= true ;
-				data['SadhuBaba-Left']['state'] 	= 'walk' ;
-				data['SadhuBaba-Left']['x']			= 240;
-				data['SadhuBaba-Left']['y']			= 228 ;
-			}
-
 			
-			// Player Key Events
-			if(engine['keyDown']['key'] == KEY_LEFT && data['Player']['state'] != 'walk-left')
+			else if(data['Stage2']['state'] == 'stageOver')
 			{
-				// consoleDiv.innerHTML = 'KEY_LEFT' ;
-				data['Player']['state'] 	= 'walk-left' ;
+				data['PopupScoreTextValue']['text']			= data['Player']['score'] ;
+				data['ChanceOverLifeTextValue']	['text']	= data['Player']['life'] ;
 			}
-			else if(engine['keyDown']['key'] == KEY_RIGHT && data['Player']['state'] != 'walk-right')
+
+			// Game Over
+			else if(data['Stage2']['state'] == 'gameOver')
 			{
-				// consoleDiv.innerHTML = 'KEY_RIGHT' ;
-				data['Player']['state'] 	= 'walk-right' ;
+				data['PopupScoreTextValue']['text']	= data['Player']['score'] ;
+				
+				data['GameOverPopup']['visible']			= true ;
+				
+				data['Player']['state'] = 'cry' ;	
 			}
-			else if(engine['keyDown']['key'] == KEY_ENTER && data['Player']['state'] != 'throw')
+			
+			else if(data['Stage2']['state'] == 'active')
 			{
-				data['Player']['state'] 	= 'throw' ;
-			}
-			else if(engine['keyDown']['active'] == false)
-			{
-				// consoleDiv.innerHTML = '' ;
-				data['Player']['state'] 	= 'stand' ;
+				if(data['Stage2']['updateCounter'] == 4200)
+				{
+					getPage('Stage2','stageOver') ;
+				}
 			}
 		}		
 	},
 	
+	'Stage3'	:
+	{
+		'update' : function()
+		{
+			if(data['Stage3']['state'] == 'chanceOver')	// Chance Over
+			{
+				data['PopupScoreTextValue']['text']	= data['Player']['score'] ;
+				data['ChanceOverLifeTextValue']	['text']	= data['Player']['life'] ;
+			}
+			
+			else if(data['Stage3']['state'] == 'stageOver')
+			{
+				data['PopupScoreTextValue']['text']			= data['Player']['score'] ;
+				data['ChanceOverLifeTextValue']	['text']	= data['Player']['life'] ;
+			}
+
+			// Game Over
+			else if(data['Stage3']['state'] == 'gameOver')
+			{
+				data['PopupScoreTextValue']['text']	= data['Player']['score'] ;
+				
+				data['GameOverPopup']['visible']			= true ;
+				
+				data['Player']['state'] = 'cry' ;	
+			}
+			else if(data['Stage3']['state'] == 'gameWin')
+			{
+				data['PopupScoreTextValue']['text']	= data['Player']['score'] ;	
+			}
+			else if(data['Stage3']['state'] == 'active')
+			{
+				if(data['Stage3']['updateCounter'] == 4200)
+				{
+					getPage('Stage3','gameWin') ;
+				}
+			}
+		}
+	},
+
 	'Player'	:
 	{
 		'update' : function()
 		{
-			// Player Key Events
-			if(engine['keyDown']['key'] == KEY_LEFT && data['Player']['state'] != 'walk-left')
+			// Input Events - Key and Mouse/Single Touch
+			
+			if(data['Player']['state'] == 'stand')
 			{
-				data['Player']['state'] 	= 'walk-left' ;
-			}
-			else if(engine['keyDown']['key'] == KEY_RIGHT && data['Player']['state'] != 'walk-right')
-			{
-				// consoleDiv.innerHTML = 'KEY_RIGHT' ;
-				data['Player']['state'] 	= 'walk-right' ;
-			}
-			else if(engine['keyDown']['key'] == KEY_ENTER && data['Player']['state'] != 'throw')
-			{
-				data['Player']['state'] 	= 'throw' ;
-				
-				// Throwing Balloons
-				var balloons = data['Player']['Balloons'] ;
-				var cballoon = data['Player']['cBalloon'] ;
-				var cballoonName = balloons[cballoon] ;
-				
-				data[cballoonName]['state'] 	= 'active' ;
-				data[cballoonName]['visible']	= true ;
-				data[cballoonName]['x'] 		= data['Player']['x'] + 11 ;
-				data[cballoonName]['y'] 		= data['Player']['y'] + 32 ;
-				
-				if(cballoon < balloons.length - 1)
+				if(engine['keyDown']['key'] == KEY_LEFT)
 				{
-					data['Player']['cBalloon']++ ;
+					data['Player']['state'] 	= 'walk-left' ;
 				}
-				else
+				else if(engine['keyDown']['key'] == KEY_RIGHT)
 				{
-					data['Player']['cBalloon'] = 0 ;
+					data['Player']['state'] 	= 'walk-right' ;
 				}
-				
+				else if(engine['keyDown']['key'] == KEY_ENTER)
+				{
+					if(data['Player']['balloons'] > 0)
+					{
+						data['Player']['balloons']-- ;
+						
+						data['Player']['state'] 	= 'throw' ;
+						
+						var index = data['Player']['cBalloon'] ;
+						
+						data['Balloons']['state'] 	[index]= 'active' + getRandomInteger(0, 3) ;
+						
+						data['Balloons']['visible']	[index]= true ;
+						data['Balloons']['x'] 		[index]= data['Player']['x'] + 10 ;
+						data['Balloons']['y'] 		[index]= data['Player']['y'] + 32 ;
+						
+						if(index < data['Balloons']['size'] - 1)
+						{
+							data['Player']['cBalloon']++ ;
+						}
+						else
+						{
+							data['Player']['cBalloon'] = 0 ;
+						}
+					}
+				}
+				else if(engine['keyDown']['active'] == false && engine['mouseDown']['active'] == true)
+				{
+					if(engine['mouseDown']['clientY'] < 67)
+					{
+						if(engine['touchLayer'] == 'Player')
+						{
+							if(data['Player']['balloons'] > 0)
+							{
+								data['Player']['balloons']-- ;
+							
+								data['Player']['state'] 	= 'throw' ;
+					
+								var index = data['Player']['cBalloon'] ;
+							
+								data['Balloons']['state'] 	[index]= 'active' + getRandomInteger(0, 3) ;
+								data['Balloons']['visible']	[index]= true ;
+								data['Balloons']['x'] 		[index]= data['Player']['x'] + 10 ;
+								data['Balloons']['y'] 		[index]= data['Player']['y'] + 32 ;
+								
+								if(index < data['Balloons']['size'] - 1)
+								{
+									data['Player']['cBalloon']++ ;
+								}
+								else
+								{
+									data['Player']['cBalloon'] = 0 ;
+								}
+							}
+						}
+						else
+						{
+							var targetX = engine['mouseDown']['clientX'] ;
+							
+							// Move Left
+							if(targetX < data['Player']['x'])
+							{
+								data['Player']['state'] 	= 'walk-left' ;
+							}
+							
+							// Move Right
+							else if(targetX > data['Player']['x'])
+							{
+								data['Player']['state'] 	= 'walk-right' ;
+							}
+						}
+					}
+				}
 			}
-			else if(engine['keyDown']['active'] == false)
+			else if(data['Player']['state'] == 'walk-left')
 			{
-				// consoleDiv.innerHTML = '' ;
-				data['Player']['state'] 	= 'stand' ;
+				if(engine['keyDown']['active'] == false && engine['mouseDown']['active'] == false)
+				{
+					data['Player']['state'] = 'stand' ;
+					engine['mouseDown']['active'] = false ;
+				}
+				else if(engine['keyDown']['active'] == false && engine['mouseDown']['active'] == true)
+				{
+					var targetX = engine['mouseDown']['clientX'] ;
+					
+					if(targetX > data['Player']['x'] + 5)
+					{
+						data['Player']['state'] = 'stand' ;
+						engine['mouseDown']['active'] = false ;
+					}
+				}
+			}
+			else if(data['Player']['state'] == 'walk-right')
+			{
+				if(engine['keyDown']['active'] == false && engine['mouseDown']['active'] == false)
+				{
+					data['Player']['state'] = 'stand' ;
+					engine['mouseDown']['active'] = false ;
+				}
+				else if(engine['keyDown']['active'] == false && engine['mouseDown']['active'] == true)
+				{
+					var targetX = engine['mouseDown']['clientX'] ;
+					
+					if(targetX < data['Player']['x'] + 18)
+					{
+						data['Player']['state'] = 'stand' ;
+						engine['mouseDown']['active'] = false ;
+					}
+				}
+			}
+			else if(data['Player']['state'] == 'throw')
+			{
+				if(engine['keyDown']['active'] == false && engine['mouseDown']['active'] == false)
+				{
+					data['Player']['state'] = 'stand' ;
+				}
 			}
 			
+			// Bounding Player Within Screen
 			if(data['Player']['x'] < -18)
 			{
-				data['Player']['x'] = -18 ;
+				data['Player']['x'] = -8 ;
+				data['Player']['state'] = 'stand' ;
 			}
 			else if(data['Player']['x'] > 240 - 18)
 			{
 				data['Player']['x'] = 240 - 18 ;
+				data['Player']['state'] = 'stand' ;
 			}
 		}
 	},
 	
-	'Balloon0'	:
+	'Businessman-Right' :
+	{
+		'update' : function()
+		{	
+			if(data['Businessman-Right']['state'] == 'hit')
+			{
+				if(data['Businessman-Right']['animationIndex'] == 11)
+				{
+					data['Businessman-Right']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Businessman-Left' :
+	{
+		'update' : function()
+		{	
+			if(data['Businessman-Left']['state'] == 'hit')
+			{
+				if(data['Businessman-Left']['animationIndex'] == 11)
+				{
+					data['Businessman-Left']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Girl1-Left' :
+	{
+		'update' : function()
+		{	
+			if(data['Girl1-Left']['state'] == 'hit')
+			{
+				if(data['Girl1-Left']['animationIndex'] == 15)
+				{
+					data['Girl1-Left']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Girl1-Right' :
+	{
+		'update' : function()
+		{	
+			if(data['Girl1-Right']['state'] == 'hit')
+			{
+				if(data['Girl1-Right']['animationIndex'] == 15)
+				{
+					data['Girl1-Right']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Skateboy-Right' :
+	{
+		'update' : function()
+		{	
+			if(data['Skateboy-Right']['state'] == 'hit')
+			{
+				//consoleDiv.innerHTML = 'bbc' + data['Skateboy-Right']['animationIndex'] ;
+				if(data['Skateboy-Right']['animationIndex'] == 1)
+				{
+					data['Skateboy-Right']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Skateboy-Left' :
+	{
+		'update' : function()
+		{	
+			if(data['Skateboy-Left']['state'] == 'hit')
+			{
+				if(data['Skateboy-Left']['animationIndex'] == 1)
+				{
+					data['Skateboy-Left']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Girl2-Right' :
+	{
+		'update' : function()
+		{	
+			if(data['Girl2-Right']['state'] == 'hit')
+			{
+				if(data['Girl2-Right']['animationIndex'] == 17)
+				{
+					data['Girl2-Right']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'Girl2-Left' :
+	{
+		'update' : function()
+		{	
+			if(data['Girl2-Left']['state'] == 'hit')
+			{
+				if(data['Girl2-Left']['animationIndex'] == 17)
+				{
+					data['Girl2-Left']['state']	= 'run' ;
+				}
+			}
+		}
+	},
+
+	'WindowBoy' :
 	{
 		'update' : function()
 		{
-			if(data['Balloon0']['state'] == 'active')
+			if(data['WindowBoy']['state'] == 'walk')
 			{
-				var layerCollided = checkBulkCollisions('Balloon0',['Businessman-Right','Girl1-Left']) ;
-				
-				if(layerCollided != false)
+				if(data['WindowBoy']['animationIndex'] == 3 && data['WindowBoy']['frameTime'] >= 250 )
 				{
-					consoleDiv.innerHTML = layerCollided ;
+					data['WindowBoy']['state']	= undefined ;
+					data['WindowBoy']['visible']= false ;
+				}
+			}
+			else if(data['WindowBoy']['state'] == 'hit')
+			{
+				if(data['WindowBoy']['animationIndex'] == 2)
+				{
+					data['WindowBoy']['state']	= undefined ;
+					data['WindowBoy']['visible']= false ;
+				}
+			}
+		}
+	},
+
+	'Bird-Left' :
+	{
+		'update' : function()
+		{	
+			if(data['Bird-Left']['state'] == 'walk')
+			{	
+				if(checkLayerCollision('Bird-Left', 'Player') == true)
+				{
+					var stage = data['app']['currentPage'] ;
 					
-					data['ScoreTextValue']['text'] += 20 ;
-					data['Balloon0']['state'] 	= undefined ;
-					data['Balloon0']['visible']	= false ;
-				}
-				
-				if(data['Balloon0']['y'] > 300)
-				{
-					data['Balloon0']['state'] 	= undefined ;
-					data['Balloon0']['visible']	= false ;
-				}
-			}
-		}
-	},
-	
-	'Balloon1'	:
-	{
-		'update' : function()
-		{
-			if(data['Balloon1']['state'] == 'active')
-			{
-				var layerCollided = checkBulkCollisions('Balloon1',['Businessman-Right','Girl1-Left']) ;
-				
-				if(layerCollided != false)
-				{
-					consoleDiv.innerHTML = layerCollided ;
+					data['Bird-Left']['state']	= 'walk' ;
+					data['Bird-Left']['visible']= false ;
 					
-					data['ScoreTextValue']['text'] += 20 ;
-					data['Balloon1']['state'] 	= undefined ;
-					data['Balloon1']['visible']	= false ;
+					data['Player']['life']-- ;
+					
+					// Impacting Player's Life
+					if(data['Player']['life'] == -1)
+					{
+						getPage(stage,'gameOver') ;
+					}
+					else
+					{
+						getPage(stage,'chanceOver') ;
+					}
 				}
-				
-				if(data['Balloon1']['y'] > 300)
+			}
+			else if(data['Bird-Left']['state'] == 'hit')
+			{
+				if(data['Bird-Left']['y']  > 320)
 				{
-					data['Balloon1']['state'] 	= undefined ;
-					data['Balloon1']['visible']	= false ;
+					data['Bird-Left']['state']		= 'walk' ;
+					data['Bird-Left']['visible']	= false ;
+				}
+			}
+		}
+	},
+
+	'Bird-Right' :
+	{
+		'update' : function()
+		{
+			if(data['Bird-Right']['state'] == 'walk')
+			{				
+				if(checkLayerCollision('Bird-Right', 'Player') == true)
+				{
+					var stage = data['app']['currentPage'] ;
+					data['Bird-Right']['state']		= 'walk' ;
+					data['Bird-Right']['visible']	= false ;
+					
+					data['Player']['life']-- ;
+					
+					if(data['Player']['life'] == -1)
+					{
+						getPage(stage,'gameOver') ;
+					}
+					else
+					{
+						getPage(stage,'chanceOver') ;
+					}
+				}
+			}
+			else if(data['Bird-Right']['state'] == 'hit')
+			{
+				if(data['Bird-Right']['y']  > 320)
+				{
+					data['Bird-Right']['state']		= 'walk' ;
+					data['Bird-Right']['visible']	= false ;
+				}
+			}
+		}
+	},
+
+	'Balloons'	:
+	{
+		'update' : function()
+		{
+			// Balloon Character Hit and Road Hit
+			for(var i = 0; i < data['Balloons']['size']; i++)
+			{
+				if(data['Balloons']['state'][i] == 'active0' || data['Balloons']['state'][i] == 'active1' || data['Balloons']['state'][i] == 'active2' || data['Balloons']['state'][i] == 'active3')
+				{
+					// Balloon Character Hit
+					var layersCollided = checkLayerCollisions('Balloons',data['Balloons']['collisionTargets']) ;
+					//consoleDiv.innerHTML = JSON.stringify(layersCollided,undefined,3) ;
+					
+					if(layersCollided != undefined)
+					{
+						var index = layersCollided['layer1Index'] ;
+						
+						// Impact on Balloon
+						data['Balloons']['state'][index] 		= undefined ;
+						data['Balloons']['visible'][index]		= false ;
+						
+						// Impact on character
+						var character = layersCollided['layer2'] ;
+						
+						if(data[character]['state'] == 'walk')
+						{
+							data[character]['state'] = 'hit' ;
+						}
+						else if(data[character]['state'] == 'hit')
+						{
+							if(data[character]['animation']['run'] != undefined)
+							{
+								data[character]['state'] = 'run' ;
+							}
+						}
+						
+						data[character]['animationIndex']	= 0 ;
+						
+						// Playing sounds for character hit
+						if(character == 'Businessman-Right' || character == 'Businessman-Left')
+						{
+							data['audioBusinessman']['state'] = 'play' ;
+						}
+						else if(character == 'Bird-Right' || character == 'Bird-Left')
+						{
+							data['audioBird']['state'] = 'play' ;
+						}
+						else if(character == 'Girl1-Right' || character == 'Girl1-Left')
+						{
+							data['audioGirl1']['state'] = 'play' ;
+						}
+						else if(character == 'Girl2-Right' || character == 'Girl2-Left')
+						{
+							data['audioGirl2']['state'] = 'play' ;
+						}
+						else if(character == 'Skateboy-Right' || character == 'Skateboy-Left')
+						{
+							data['audioSkateboy']['state'] = 'play' ;
+						}
+						else
+						{
+							data['audioGubbarra']['state'] = 'play' ;
+						}
+						
+						// Impact on Player's score
+						data['Player']['score'] 	+= data[character]['points'] ;
+						
+						// Impact on Points
+						data['Points']['state'][index]	= (data[character]['points']).toString() ;
+						
+						if(data[character]['points'] >= 0 && data[character]['points'] <= 180)
+						{
+							data[character]['points'] += 20 ;
+						}
+						
+						data['Points']['x'][index]		= data['Balloons']['x'][index] ;
+						data['Points']['y'][index]		= data['Balloons']['y'][index] - 18 ;
+						
+						data['Points']['visible'][index] = true ;
+					}
+					
+					// Balloon Road Hit
+					if(data['Balloons']['y'][i] > 300)
+					{
+						data['Balloons']['state']	[i] = undefined ;
+						data['Balloons']['visible']	[i]	= false ;
+						
+						data['Water']['state'] 	[i]= 'active' ;
+						data['Water']['visible'][i]= true ;
+						data['Water']['x'] 		[i]= data['Balloons']['x'][i] ;
+						data['Water']['y'] 		[i]= data['Balloons']['y'][i] ;
+						
+						data['audioGubbarra']['state'] = 'play' ;
+						//consoleDiv.innerHTML = 'C ' + i + ' ' + data['Water']['animationIndex'][i] ;
+					}
 				}
 			}
 		}
 	},
 	
-	'Balloon2'	:
+	'Water'		:
 	{
 		'update' : function()
 		{
-			if(data['Balloon2']['state'] == 'active' && data['Balloon2']['y'] > 300)
+			for(var i = 0; i < data['Water']['size']; i++)
 			{
-				var layerCollided = checkBulkCollisions('Balloon2',['Businessman-Right','Girl1-Left']) ;
-				
-				if(layerCollided != false)
+				if(data['Water']['state'][i] == 'active')
 				{
-					consoleDiv.innerHTML = layerCollided ;
+					if(data['Water']['animationIndex'][i] == 2)
+					{
+						data['Water']['state'][i]	= undefined ;
+						data['Water']['visible'][i]	= false ;
+					}
 				}
-				
-				data['Balloon2']['state'] 	= undefined ;
-				data['Balloon2']['visible']	= false ;
 			}
 		}
 	},
 	
-	'Balloon3'	:
+	'Points'		:
 	{
 		'update' : function()
 		{
-			if(data['Balloon3']['state'] == 'active' && data['Balloon3']['y'] > 300)
+			for(var i = 0; i < data['Points']['size']; i++)
 			{
-				var layerCollided = checkBulkCollisions('Balloon3',['Businessman-Right','Girl1-Left']) ;
-				
-				if(layerCollided != false)
+				if(data['Points']['visible'][i] == true)
 				{
-					consoleDiv.innerHTML = layerCollided ;
+					if(data['Points']['animationIndex'][i] == 2)
+					{
+						data['Points']['state'][i]	= undefined ;
+						data['Points']['visible'][i]= false ;
+					}
 				}
-				
-				data['Balloon3']['state'] 	= undefined ;
-				data['Balloon3']['visible']	= false ;
 			}
 		}
 	},
 	
-	'Balloon4'	:
+	'ScoreTextValue'		:
 	{
 		'update' : function()
 		{
-			if(data['Balloon4']['state'] == 'active' && data['Balloon4']['y'] > 300)
+			data['ScoreTextValue']['text'] = data['Player']['score'] ;
+		}
+	},
+
+	'LifeTextValue'		:
+	{
+		'update' : function()
+		{
+			if(data['Player']['life'] > -1)
 			{
-				var layerCollided = checkBulkCollisions('Balloon4',['Businessman-Right','Girl1-Left']) ;
+				data['LifeTextValue']['text'] = data['Player']['life'] ;
+			}
+			else
+			{
+				data['LifeTextValue']['text'] = 0 ;
+			}
+		}
+	},
+
+	'BalloonTextValue'		:
+	{
+		'update' : function()
+		{
+			data['BalloonTextValue']['text'] = data['Player']['balloons'] ;
+		}
+	},
+	
+	'PauseButton'	:
+	{
+		'update' : function()
+		{
+			if(engine['touchLayer'] == 'PauseButton')
+			{	
+				data['PauseButton']['visible'] = false ;
 				
-				if(layerCollided != false)
-				{
-					consoleDiv.innerHTML = layerCollided ;
-				}
-				
-				data['Balloon4']['state'] 	= undefined ;
-				data['Balloon4']['visible']	= false ;
+				var stage = data['app']['currentPage'] ;
+				getPage(stage,'paused') ;
 			}
 		}
 	},
 	
-	'Balloon5'	:
+	'ResumeOptionText'	:
 	{
 		'update' : function()
 		{
-			if(data['Balloon5']['state'] == 'active' && data['Balloon5']['y'] > 300)
+			if(engine['touchLayerPart'] == 'ResumeOptionText')
+			{	
+				//data['PausedPopup']['visible'] 	= false ;
+				
+				data['PauseButton']['visible'] = true ;
+					
+				var stage = data['app']['currentPage'] ;
+				getPage(stage,'active') ;
+			}
+			
+		}
+	},
+	
+	'MenuOptionText'	:
+	{
+		'update' : function()
+		{
+			if(engine['touchLayerPart'] == 'MenuOptionText')
 			{
-				var layerCollided = checkBulkCollisions('Balloon5',['Businessman-Right','Girl1-Left']) ;
+				getPage('Menu','NewGame') ;
+			}
+			
+		}
+	},
+	
+	'ChanceOverPopup'	:
+	{
+		'update' : function()
+		{
+			if(engine['touchLayer'] == 'ChanceOverPopup')
+			{
+				var stage = data['app']['currentPage'] ;
 				
-				if(layerCollided != false)
-				{
-					consoleDiv.innerHTML = layerCollided ;
-				}
-				
-				data['Balloon5']['state'] 	= undefined ;
-				data['Balloon5']['visible']	= false ;
+				getPage(stage, 'active') ;
 			}
 		}
 	},
 	
-	'Balloon6'	:
+	'GameOverPopup'	:
 	{
 		'update' : function()
 		{
-			if(data['Balloon6']['state'] == 'active' && data['Balloon6']['y'] > 300)
+			if(engine['touchLayer'] == 'GameOverPopup')
 			{
-				var layerCollided = checkBulkCollisions('Balloon6',['Businessman-Right','Girl1-Left']) ;
+				var stage = data['app']['currentPage'] ;
 				
-				if(layerCollided != false)
-				{
-					consoleDiv.innerHTML = layerCollided ;
-				}
-				
-				data['Balloon6']['state'] 	= undefined ;
-				data['Balloon6']['visible']	= false ;
+				getPage('Menu', 'NewGame') ;
 			}
 		}
 	},
 	
-	'Balloon7'	:
+	'StageOverPopup'	:
 	{
 		'update' : function()
 		{
-			if(data['Balloon7']['state'] == 'active' && data['Balloon7']['y'] > 300)
+			if(engine['touchLayer'] == 'StageOverPopup')
 			{
-				var layerCollided = checkBulkCollisions('Balloon7',['Businessman-Right','Girl1-Left']) ;
+				var stage = data['app']['currentPage'] ;
 				
-				if(layerCollided != false)
+				if(stage == 'Stage1')
 				{
-					consoleDiv.innerHTML = layerCollided ;
+					getPage('Stage2', 'active') ;
 				}
-				
-				data['Balloon7']['state'] 	= undefined ;
-				data['Balloon7']['visible']	= false ;
+				else if(stage == 'Stage2')
+				{
+					getPage('Stage3', 'active') ;
+				}
 			}
 		}
 	},
 	
-	'Balloon8'	:
+	'GameWinPopup'	:
 	{
 		'update' : function()
 		{
-			if(data['Balloon8']['state'] == 'active' && data['Balloon8']['y'] > 300)
+			if(engine['touchLayer'] == 'GameWinPopup')
 			{
-				var layerCollided = checkBulkCollisions('Balloon8',['Businessman-Right','Girl1-Left']) ;
+				var stage = data['app']['currentPage'] ;
 				
-				if(layerCollided != false)
-				{
-					consoleDiv.innerHTML = layerCollided ;
-				}
-				
-				data['Balloon8']['state'] 	= undefined ;
-				data['Balloon8']['visible']	= false ;
-			}
-		}
-	},
-	
-	'Balloon9'	:
-	{
-		'update' : function()
-		{
-			if(data['Balloon9']['state'] == 'active' && data['Balloon9']['y'] > 300)
-			{
-				var layerCollided = checkBulkCollisions('Balloon9',['Businessman-Right','Girl1-Left']) ;
-				
-				if(layerCollided != false)
-				{
-					consoleDiv.innerHTML = layerCollided ;
-				}
-				
-				data['Balloon9']['state'] 	= undefined ;
-				data['Balloon9']['visible']	= false ;
+				getPage('Menu', 'NewGame') ;
 			}
 		}
 	}
