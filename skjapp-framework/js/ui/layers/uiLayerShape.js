@@ -2,6 +2,25 @@
 ///// SHAPE : LINE	/////
 /////////////////////////
 
+var effects = {} ;
+
+effects["fadeIn"] 	= {} ;
+effects["fadeOut"] 	= {} ;
+effects["slideIn"] 	= {} ;
+effects["slideOut"] = {} ;
+effects["switchOff"]= {} ;
+effects["grow"] 	= {} ;
+effects["squish"] 	= {} ;
+effects["shake"] 	= {} ;
+effects["fold"] 	= {} ;
+effects["pulsate"] 	= {} ;
+effects["dropOut"] 	= {} ;
+
+var create_ui_layer_shape_line = function createUILayerShapeLine(layer)
+{
+	
+}
+
 var create_ui_layer_shape_line = function createUILayerShapeLine(layer)
 {
 	
@@ -26,10 +45,11 @@ var draw_ui_layer_shape_line = function drawUILayerShapeLine(layer)
 			
 	// Drawing a simple line
 	ctx.beginPath() ;			
-	ctx.moveTo(x,y) ;			// Starting point of line 
-	ctx.lineTo(endX,endY) ;		// Ending point of line
+	ctx.moveTo(x + 0.5,y + 0.5) ; 
+	ctx.lineTo(endX + 0.5,endY + 0.5) ;
 	ctx.closePath() ;
-	ctx.stroke() ;				// Drawing the above coded path
+	ctx.strokeStyle = data[layer]['color'] ;
+	ctx.stroke() ;
 }
 
 var delete_ui_layer_shape_line = function deleteUILayerShapeLine()
@@ -54,7 +74,7 @@ data['engine']['ui.layer.shape.line'] =
 
 var create_ui_layer_shape_rectangle = function createUILayerShapeRectangle(layer)
 {
-	
+	createEffects(layer) ;
 }
 
 var get_ui_layer_shape_rectangle = function getUILayerShapeRectangle()
@@ -75,27 +95,377 @@ var draw_ui_layer_shape_rectangle = function drawUILayerShapeRectangle(layer)
 	var height	= data[layer]['height'] ;
 		
 	var fill	= data[layer]['fill'] ;
-		
-	var rgb		= data[layer]['rgb'] ;
-							
-	ctx.beginPath() ;
-	ctx.rect(x,y,width,height) ;
-	ctx.closePath() ;						
+	var rotate  = data[layer]['rotate'] ;
 	
-	if(fill == true)
+	var rotateX	= data[layer]['rotateX'] ;
+	var rotateY	= data[layer]['rotateY'] ;
+	
+	var effect	= data[layer]['effect'] ;
+	
+	ctx.save() ;
+	
+	if(effect != undefined)
 	{
-		// To test condition for rgb = undefined
-		ctx.fillStyle = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')' ;
-		ctx.fill() ;
-		ctx.fillStyle = 'rgb(0,0,0)' ;
-		//alert(layer + ' ' + 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')') ;
+		if(effect == "fadeIn")
+		{
+			if(effects["fadeIn"][layer] == undefined)
+			{
+				effects["fadeIn"][layer] 	= {"alpha" : 0} ;
+			}
+			
+			var alpha = effects["fadeIn"][layer]['alpha'] ;
+			
+			ctx.globalAlpha = alpha ;
+		
+			if(alpha <= 1.0)
+			{
+				effects["fadeIn"][layer]['alpha'] += 0.025 ;
+			}
+			else
+			{
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "fadeOut")
+		{
+			if(effects["fadeOut"][layer] == undefined)
+			{
+				effects["fadeOut"][layer] 	= {"alpha" : 1.0} ;
+			}
+			
+			var alpha = effects["fadeOut"][layer]['alpha'] ;
+			
+			ctx.globalAlpha = alpha ;
+			
+			if(alpha >= 0.1)
+			{
+				effects["fadeOut"][layer]['alpha'] -= 0.025 ;
+			}
+			else
+			{
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "slideIn")
+		{
+			if(effects["slideIn"][layer] == undefined)
+			{
+				effects["slideIn"][layer] 	= {"height" : height, "to" : 1} ;
+			}
+			
+			data[layer]['height'] = effects["slideIn"][layer]['to'] ;
+			
+			if(effects["slideIn"][layer]["height"] >= effects["slideIn"][layer]['to'])
+			{
+				effects["slideIn"][layer]['to'] += 10 ;
+			}
+			else
+			{
+				data[layer]['height'] = effects["slideIn"][layer]['height'] ;
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "slideOut")
+		{
+			if(effects["slideOut"][layer] == undefined)
+			{
+				effects["slideOut"][layer] 	= {"height" : height, "from" : height} ;
+			}
+			
+			data[layer]['height'] = effects["slideOut"][layer]['from'] ;
+			
+			if(effects["slideOut"][layer]["height"] >= effects["slideOut"][layer]['from'] && effects["slideOut"][layer]['from'] > 0)
+			{
+				effects["slideOut"][layer]['from'] -= 10 ;
+			}
+			else
+			{
+				data[layer]['height'] = 0 ;
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "switchOff")
+		{
+			if(effects["switchOff"][layer] == undefined)
+			{
+				effects["switchOff"][layer] = {"height" : height, "from" : height, "alpha" : 1} ;
+			}
+			
+			data[layer]['height'] = effects["switchOff"][layer]['from'] ;
+			
+			var alpha = effects["switchOff"][layer]['alpha'] ;
+			
+			ctx.globalAlpha = alpha ;
+		
+			if(alpha >= 0.2)
+			{
+				effects["switchOff"][layer]['alpha'] -= 0.025 ;
+			}
+			else
+			{
+				effects["switchOff"][layer]['alphaEffect'] = true ;
+			}
+			
+			if(effects["switchOff"][layer]['alphaEffect'] == true)
+			{
+				if(effects["switchOff"][layer]["height"] >= effects["switchOff"][layer]['from'] && effects["switchOff"][layer]['from'] > 0)
+				{
+					effects["switchOff"][layer]['from'] -= 10 ;
+					data[layer]['y'] += 5 ;
+				}
+				else
+				{
+					data[layer]['height'] = 0 ;
+					data[layer]["effectComplete"] = true ;
+				}
+				
+				ctx.globalAlpha = 1.0 ;
+			}
+		}
+		else if(effect == "grow")
+		{
+			if(effects["grow"][layer] == undefined)
+			{
+				var growX = x + 40 ;
+				var growY = y + 40 ;
+				
+				effects["grow"][layer] = 
+				{
+					"x" : x, 
+					"y" : y, 
+					"width" : width, 
+					"height" : height, 
+					"grow-width" : 20, 
+					"grow-height" : 20,
+					"grow-x" : growX,
+					"grow-y" : growY
+				} ;
+			}
+			
+			data[layer]['x'] = effects["grow"][layer]['grow-x'] ;
+			data[layer]['y'] = effects["grow"][layer]['grow-y'] ;
+			
+			data[layer]['height']= effects["grow"][layer]['grow-height'] ;
+			data[layer]['width'] = effects["grow"][layer]['grow-height'] ;
+			
+			//alert(effects["grow"][layer]['grow-height'])
+			
+			if(effects["grow"][layer]["height"] >= effects["grow"][layer]['grow-height'])
+			{
+				effects["grow"][layer]['grow-x'] -= 2 ;
+				effects["grow"][layer]['grow-y'] -= 2 ;
+				
+				effects["grow"][layer]['grow-height'] += 4 ;
+				effects["grow"][layer]['grow-width'] += 4 ;
+			}
+			else
+			{
+				data[layer]['width'] = effects["grow"][layer]['width'] ;
+				data[layer]['height']= effects["grow"][layer]['height'] ;
+				
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "squish")
+		{
+			if(effects["squish"][layer] == undefined)
+			{
+				effects["squish"][layer] = {"width" : width, "height" : height} ;		
+			}
+			
+			if(effects["squish"][layer]["height"] >= data[layer]['height'] && data[layer]['height'] > 0)
+			{
+				data[layer]['width']  -= 2 ;
+				data[layer]['height'] -= 2 ;
+			}
+			else
+			{
+				data[layer]['width'] = 0 ;
+				data[layer]['height']= 0 ;
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "shake")
+		{
+			if(effects["shake"][layer] == undefined)
+			{
+				effects["shake"][layer] = {"x" : x, "shake" : 0} ;
+			}
+			
+			if(effects["shake"][layer]["shake"] <= 26)
+			{
+				if(effects["shake"][layer]["shake"] >= 1 || effects["shake"][layer]["shake"] <= 6 && effects["shake"][layer]["shake"] >= 13 || effects["shake"][layer]["shake"] <= 18)
+				{
+					if(effects["shake"][layer]["shake"] == 1)
+					{
+						data[layer]['x'] -= 2 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 2)
+					{
+						data[layer]['x'] -= 4 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 3)
+					{
+						data[layer]['x'] -= 6 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 4)
+					{
+						data[layer]['x'] -= 8 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 5)
+					{
+						data[layer]['x'] -= 12 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 6)
+					{
+						data[layer]['x'] = effects["shake"][layer]["x"] ;
+					}
+				}
+				if(effects["shake"][layer]["shake"] >= 7 || effects["shake"][layer]["shake"] <= 12)
+				{
+					
+					if(effects["shake"][layer]["shake"] == 7)
+					{
+						data[layer]['x'] += 2 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 8)
+					{
+						data[layer]['x'] += 4 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 9)
+					{
+						data[layer]['x'] += 6 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 10)
+					{
+						data[layer]['x'] += 8 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 11)
+					{
+						data[layer]['x'] += 12 ;
+					}
+					else if(effects["shake"][layer]["shake"] == 12)
+					{
+						data[layer]['x'] = effects["shake"][layer]["x"] ;
+					}
+				}
+				
+				effects["shake"][layer]["shake"] += 1 ;
+			}
+		}
+		else if(effect == "fold")
+		{
+			if(effects["fold"][layer] == undefined)
+			{
+				effects["fold"][layer] = {"width" : width, "height" : height} ;
+			}
+			
+			if(effects["fold"][layer]["height"] >= data[layer]['height'])
+			{
+				if(data[layer]['height'] > 5)
+				{
+					data[layer]['height'] -= 2 ;	
+				}
+				else if(data[layer]['width'] > 0)
+				{
+					data[layer]['width'] -= 2 ;
+				}
+				else
+				{
+					data[layer]['width'] = 0 ;
+					data[layer]['height']= 0 ;
+					data[layer]["effectComplete"] = true ;
+				}
+			}
+		}
+		else if(effect == "pulsate")
+		{
+			if(effects["pulsate"][layer] == undefined)
+			{
+				effects["pulsate"][layer] = {"alpha" : 1.0, "times" : 0} ;
+			}
+			
+			var alpha = effects["pulsate"][layer]['alpha'] ;
+			
+			ctx.globalAlpha = alpha ;
+			
+			if(effects["pulsate"][layer]['times'] < 99)
+			{
+				if(alpha >= 0)
+				{
+					effects["pulsate"][layer]['alpha'] -= 0.05 ;
+				}
+				else
+				{
+					effects["pulsate"][layer]['alpha'] = 1.0 ;
+				}
+				
+				effects["pulsate"][layer]['times']++ ;
+			}
+			else
+			{
+				effects["pulsate"][layer]['alpha'] = 1.0 ;
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+		else if(effect == "dropOut")
+		{
+			if(effects["dropOut"][layer] == undefined)
+			{
+				effects["dropOut"][layer] 	= {"alpha" : 1.0} ;
+			}
+			
+			var alpha = effects["dropOut"][layer]['alpha'] ;
+			
+			ctx.globalAlpha = alpha ;
+			
+			if(alpha >= 0.1)
+			{
+				effects["dropOut"][layer]['alpha'] -= 0.05 ;
+				data[layer]["y"] += 5 ;
+			}
+			else
+			{
+				ctx.globalAlpha = 0 ;
+				data[layer]["effectComplete"] = true ;
+			}
+		}
+	}
+	
+	if(rotate != undefined)
+	{
+		ctx.translate(x + rotateX, y + rotateY) ;
+		ctx.rotate(rotate * Math.PI / 180) ;
+	}
+	
+  	if(fill == true)
+	{
+		ctx.fillStyle =  data[layer]['color'] ;
+		
+		if(rotate != undefined)
+		{
+			ctx.fillRect(-rotateX, -rotateY, width, height) ;
+		}
+		else
+		{
+			ctx.fillRect(x, y, width, height) ;
+		}
 	}
 	else
 	{
-		ctx.strokeStyle = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')' ;	
-		ctx.stroke() ;
-		ctx.strokeStyle = 'rgb(0,0,0)' ;
+		ctx.strokeStyle = data[layer]['color'] ;
+		
+		if(rotate != undefined)
+		{
+			ctx.strokeRect(-rotateX, -rotateY, width, height) ;
+		}
+		else
+		{
+			ctx.strokeRect(x + 0.5, y + 0.5, width, height) ;
+		}
 	}
+	
+  	ctx.restore() ;
 }
 
 var delete_ui_layer_shape_rectangle = function deleteUILayerShapeRectangle()
@@ -185,6 +555,13 @@ var draw_ui_layer_shape_roundedRect = function drawUILayerShapeRoundedRect(layer
 	height			= data[layer]['height'] ;
 	roundingRadius	= data[layer]['roundingRadius'] ;
 	
+	/*
+	ctx.moveTo(x, y) ;
+	ctx.lineTo(x + width, y + height, roundingRadius) ;
+	ctx.lineTo(x, y, w, h) ;
+	ctx.lineTo(x, y, w, h) ;
+	*/
+	
 	// Drawing a simple Rounded Rect
 	/*ctx.beginPath() ;
 	ctx.moveTo(x + roundingRadius,y) ;
@@ -206,8 +583,8 @@ var delete_ui_layer_shape_roundedRect = function deleteUILayerShapeRoundedRect()
 
 data['engine']['ui.layer.shape.roundedRect'] = 
 {
-	'createLayer'	: create_ui_layer_shape_roundedRect 	,
-	'getLayer'		: get_ui_layer_shape_roundedRect		,
+	'createLayer'	: create_ui_layer_shape_roundedRect ,
+	'getLayer'		: get_ui_layer_shape_roundedRect	,
 	'updateLayer'	: update_ui_layer_shape_roundedRect	,
 	'drawLayer'		: draw_ui_layer_shape_roundedRect	,	
 	'deleteLayer'	: delete_ui_layer_shape_roundedRect
@@ -266,7 +643,7 @@ data['engine']['ui.layer.shape.triangle'] =
 	'createLayer'	: create_ui_layer_shape_triangle 	,
 	'getLayer'		: get_ui_layer_shape_triangle		,
 	'updateLayer'	: update_ui_layer_shape_triangle	,
-	'drawLayer'		: draw_ui_layer_shape_triangle	,	
+	'drawLayer'		: draw_ui_layer_shape_triangle		,	
 	'deleteLayer'	: delete_ui_layer_shape_triangle
 } ;
 

@@ -29,19 +29,21 @@ var create_ui_layer_audio = function createUILayerAudio(layer)
 
 var get_ui_layer_audio = function getUILayerAudio(layer)
 {
-	
+	var ds = document.createElement("div") ;
+	ds.setAttribute("id", "") ;
 } ;
 
 var update_ui_layer_audio = function updateUILayerAudio(layer)
 {
 	var audio = data[layer]['audio'] ;
-	
+	var source= data[layer]['src'] ;
 	var state = data[layer]['state'] ;
 	
 	if(state == 'play' && audio != undefined)
 	{
-		audio.volume = data[layer]['volume'] ;
-		audio.play() ;
+		var sound = new Audio(source) ;
+		sound.play() ;
+		
 		data[layer]['state'] = undefined ;
 	}
 } ;

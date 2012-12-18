@@ -1,5 +1,5 @@
 // Framework's Data and Code
-
+// 
 /////////////////////////
 ////GLOBAL CONSTANTS/////
 /////////////////////////
@@ -26,17 +26,20 @@ var engine =
 	'mouseOver'		: [] ,
 	'mouseOut'		: [] ,
 	
-	'keyDown'		: [],
-	'keyPress'		: [],
-	'keyUp'			: [],
+	'gesture'  		: {} ,				// Gesture
+	
+	'keyDown'		: [] ,
+	'keyPress'		: [] ,
+	'keyUp'			: [] , 
 	
 	'touchLayer'	: undefined,
 	'touchLayerPart': undefined,
 	
-	'resourcesLoaded'	: false
+	'resourcesLoaded' : false
 } ;
 
 var consoleDiv ;
+var canvasDiv ;
 var canvas ;
 var ctx ;
 
@@ -62,6 +65,8 @@ var appStartTime= 0 ;
 var appCurrentPage ;
 var appCurrentPageLayers ;
 
+var touchData = new Array() ;
+
 // Pages
 var pages ;
 
@@ -71,18 +76,24 @@ var pages ;
 
 function createEngine()
 {	
-	// alert('createEngine') ;
 	app = 'app' ;
 	
-	var title	= document.createElement('title') ;
+	/*var title	= document.createElement('title') ;
 	title.innerHTML = data['app']['name'] ;
-	document.head.appendChild(title) ;
+	document.head.appendChild(title) ;*/
 	
-	var defaultCSS	= document.createElement('style') ;
+	var viewport = document.createElement('meta') ;
+	viewport.setAttribute("name","viewport") ;
+	viewport.setAttribute("id","viewport") ;
+	viewport.setAttribute("content","width=" + data[app]["viewportWidth"] + ", height=" + data[app]["viewportHeight"] + ", user-scalable=" + data[app]["viewportResize"] + "") ;
+	document.getElementsByTagName('head')[0].appendChild(viewport);
+	
+	// NO NEED - Kamal
+	/*var defaultCSS	= document.createElement('style') ;
 	defaultCSS.innerHTML = 'canvas { margin-left : -8px ; margin-top : -8px ;}' ;
 	
-	document.head.appendChild(defaultCSS) ;
-	
+	document.head.appendChild(defaultCSS) ;*/
+
 	var scriptFiles = data['engine']['pluginfiles'] ;
 	totalScripts = scriptFiles.length ;
 	
@@ -92,9 +103,8 @@ function createEngine()
 		script.setAttribute('type','text/javascript') ;
 		script.setAttribute('src' ,scriptFiles[i]) ;
 		
-		//alert(scriptFiles[i]) ;
 		script.onload = scriptLoadCounter ;
-		document.head.appendChild(script) ;
+		document.getElementsByTagName('head')[0].appendChild(script) ;
 	}
 	
 	engine['keyDown']	['active']	= false ;
@@ -124,12 +134,12 @@ function deleteEngine()
 // Engine Console Code
 function showConsole()
 {
-	document.body.appendChild(consoleDiv) ;
+	// document.body.appendChild(consoleDiv) ;
 }
 
 function hideConsole()
 {
-	document.body.removeChild(consoleDiv) ;
+	// document.body.removeChild(consoleDiv) ;
 }
 
 /////////////////////////
@@ -191,13 +201,32 @@ function createApp()
 	
 	// Creating default Canvas
 	canvas		= document.createElement('canvas') ;
-	canvas.id	= 'canvas1' ;
-	canvas.width	= appWidth ;
-	canvas.height	= appHeight ;
-	document.body.appendChild(canvas) ;
+	//alert("create app2") ;
+	canvas.setAttribute("id", "canvas1") ;
+	canvas.setAttribute("width", appWidth) ;
+	canvas.setAttribute("height", appHeight) ;
 	
-	ctx	= canvas.getContext('2d') ;
+	canvasDiv = document.createElement('div') ;
+	canvasDiv.setAttribute("id", "canvasDiv") ;
 	
+	var pos = "position: absolute;left:0px; top:0px; width :" + appWidth + "px; height :" + appHeight + "px;" ;
+	canvasDiv.setAttribute("style", pos) ;
+	
+	canvasDiv.appendChild(canvas) ;
+	
+    document.body.appendChild(canvasDiv) ;
+	
+	ctx			= document.getElementById("canvas1").getContext('2d') ;
+	ctxEvent	= document.getElementById("canvas1") ;
+	
+	// GESTURE EVENTS
+	ctxEvent.ontouchstart 	= touchStart ;			// touchstart
+	ctxEvent.ontouchmove 	= touchMove ;			// touchmove
+	ctxEvent.ontouchend 	= touchEnd ;			// touchend
+	ctxEvent.ontouchenter 	= touchEnter ;			// touchenter
+	ctxEvent.ontouchleave 	= touchLeave ;			// touchleave
+	ctxEvent.ontouchcancel 	= touchCancel ;			// touchcancel
+    
 	// Setting Default Stroke Style and Fill Style as Black Color
 	ctx.strokeStyle = '#000000' ;
 	ctx.fillStyle	= '#000000' ;
@@ -222,8 +251,6 @@ function createApp()
 		createPage(pages[i]) ;
 	}
 	
-	//alert('hello1') ;
-	
 	// Starting Timer
 	appTickTime = 1000 / appMaxFrameRate ;
 	setInterval(updateApp,appTickTime) ;
@@ -232,7 +259,7 @@ function createApp()
 	appStartTime= date.getTime();
 	getPage(appCurrentPage) ;
 	
-	showConsole() ;
+	//showConsole() ;
 	
 	updateApp() ;
 	drawApp() ;
@@ -284,6 +311,86 @@ function drawApp()
 	}
 }
 
+function createEffects(layer)
+{
+	var x		= data[layer]['x'] ;
+	var y		= data[layer]['y'] ;
+	var width	= data[layer]['width'] ;
+	var height	= data[layer]['height'] ;
+	var effect	= data[layer]['effect'] ;
+	
+	// Initiate the Properties
+	if(effect == "fadeIn")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["fadeIn"][layer] 	= {"alpha" : 0} ;
+	}
+	else if(effect == "fadeOut")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["fadeOut"][layer] 	= {"alpha" : 1.0} ;
+	}
+	else if(effect == "slideIn")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["slideIn"][layer] 	= {"height" : height, "to" : 1} ;
+	}
+	else if(effect == "slideOut")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["slideOut"][layer] 	= {"height" : height, "from" : height} ;
+	}
+	else if(effect == "switchOff")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["switchOff"][layer] = {"height" : height, "from" : height, "alpha" : 1} ;
+	}
+	else if(effect == "grow")
+	{
+		var growX = x + 40 ;
+		var growY = y + 40 ;
+		
+		data[layer]["effectComplete"] = undefined ;
+		
+		effects["grow"][layer] = 
+		{
+			"x" : x, 
+			"y" : y, 
+			"width" : width, 
+			"height" : height, 
+			"grow-width" : 20, 
+			"grow-height" : 20,
+			"grow-x" : growX,
+			"grow-y" : growY
+		} ;
+	}
+	else if(effect == "squish")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["squish"][layer] = {"width" : width, "height" : height} ;
+	}
+	else if(effect == "shake")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["shake"][layer] = {"x" : x, "shake" : 0} ;
+	}
+	else if(effect == "fold")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["fold"][layer] = {"width" : width, "height" : height} ;
+	}
+	else if(effect == "pulsate")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["pulsate"][layer] 	= {"alpha" : 1.0, "times" : 0} ;
+	}
+	else if(effect == "dropOut")
+	{
+		data[layer]["effectComplete"] = undefined ;
+		effects["dropOut"][layer] 	= {"alpha" : 1.0} ;
+	}
+}
+
 function closeApp()
 {
 	window.close() ;
@@ -293,7 +400,6 @@ function deleteApp()
 {
 	
 }
-
 
 /////////////////////////
 /////	UI CODE		/////
@@ -344,13 +450,10 @@ function createLayer(layer)
 	{	
 		var type = data[layer]['type'] ;
 	
-		//alert(type + ' ' + data['engine'][type]) ;
 		// Calling createLayer function in specific layer plugin
 		data['engine'][type]['createLayer'](layer) ;
 	
 		data[layer]['created'] = true ;
-		
-		// consoleDiv.innerHTML = consoleDiv.innerHTML + '</br>' + layer ;
 	}
 }
 
@@ -404,6 +507,24 @@ function updateLayer(layer)
 		data['engine'][type]['updateLayer'](layer) ;
 	}
 	else if(type == 'ui.layer.audio')
+	{
+		data['engine'][type]['updateLayer'](layer) ;
+	}
+	else if(type == 'ui.layer.html.div')
+	{
+		data['engine'][type]['updateLayer'](layer) ;
+	}
+	else if(type == 'ui.layer.html.button')
+	{
+		data['engine'][type]['updateLayer'](layer) ;
+	}
+	else if(type == 'ui.layer.html.textbox')
+	{
+		data['engine'][type]['updateLayer'](layer) ;
+	}
+	
+	// Blackberry
+	else if(type == 'device.blackberry10')
 	{
 		data['engine'][type]['updateLayer'](layer) ;
 	}
@@ -503,6 +624,9 @@ function getTouchLayer(xx, yy)
 	}
 }
 
+// GESTURE
+
+
 // MOUSE INPUT CODE
 function mouseClick(e)
 {
@@ -511,11 +635,11 @@ function mouseClick(e)
 	engine['mouseClick']['screenX']	= e.screenX ;
 	engine['mouseClick']['screenX']	= e.screenY ;
 	
-	engine['mouseClick']['clientX']	= e.clientX ;
-	engine['mouseClick']['clientY']	= e.clientY ;
+	engine['mouseClick']['clientX']	= e.pageX ;
+	engine['mouseClick']['clientY']	= e.pageY ;
 	
 	engine['mouseClick']['ctrlKey']	= e.ctrlKey ;
-	engine['mouseClick']['shiftKey']	= e.shiftKey ;
+	engine['mouseClick']['shiftKey']= e.shiftKey ;
 	engine['mouseClick']['altKey']	= e.altKey ;
 	
 	// button value 0 means LEFT MOUSE BUTTON
@@ -532,8 +656,8 @@ function mouseDblClick(e)
 	engine['mouseDblClick']['screenX']	= e.screenX ;
 	engine['mouseDblClick']['screenX']	= e.screenY ;
 	
-	engine['mouseDblClick']['clientX']	= e.clientX ;
-	engine['mouseDblClick']['clientY']	= e.clientY ;
+	engine['mouseDblClick']['clientX']	= e.pageX ;
+	engine['mouseDblClick']['clientY']	= e.pageY ;
 	
 	engine['mouseDblClick']['ctrlKey']	= e.ctrlKey ;
 	engine['mouseDblClick']['shiftKey']	= e.shiftKey ;
@@ -553,8 +677,8 @@ function mouseDown(e)
 	engine['mouseDown']['screenX']	= e.screenX ;
 	engine['mouseDown']['screenX']	= e.screenY ;
 	
-	engine['mouseDown']['clientX']	= e.clientX ;
-	engine['mouseDown']['clientY']	= e.clientY ;
+	engine['mouseDown']['clientX']	= e.pageX ;
+	engine['mouseDown']['clientY']	= e.pageY ;
 	
 	engine['mouseDown']['ctrlKey']	= e.ctrlKey ;
 	engine['mouseDown']['shiftKey']	= e.shiftKey ;
@@ -589,8 +713,8 @@ function mouseUp(e)
 	engine['mouseUp']['screenX']	= e.screenX ;
 	engine['mouseUp']['screenX']	= e.screenY ;
 	
-	engine['mouseUp']['clientX']	= e.clientX ;
-	engine['mouseUp']['clientY']	= e.clientY ;
+	engine['mouseUp']['clientX']	= e.pageX ;
+	engine['mouseUp']['clientY']	= e.pageY ;
 	
 	engine['mouseUp']['ctrlKey']	= e.ctrlKey ;
 	engine['mouseUp']['shiftKey']	= e.shiftKey ;
@@ -609,8 +733,8 @@ function mouseMove(e)
 	engine['mouseMove']['screenX']	= e.screenX ;
 	engine['mouseMove']['screenX']	= e.screenY ;
 	
-	engine['mouseMove']['clientX']	= e.clientX ;
-	engine['mouseMove']['clientY']	= e.clientY ;
+	engine['mouseMove']['clientX']	= e.pageX ;
+	engine['mouseMove']['clientY']	= e.pageY ;
 	
 	engine['mouseMove']['ctrlKey']	= e.ctrlKey ;
 	engine['mouseMove']['shiftKey']	= e.shiftKey ;
@@ -619,7 +743,6 @@ function mouseMove(e)
 	// button value 0 means LEFT MOUSE BUTTON
 	// button value 1 means MOUSE WHEEL BUTTON
 	// button value 2 means RIGHT MOUSE BUTTON
-	
 }
 
 function mouseOver(e)
@@ -629,8 +752,8 @@ function mouseOver(e)
 	engine['mouseOver']['screenX']	= e.screenX ;
 	engine['mouseOver']['screenX']	= e.screenY ;
 	
-	engine['mouseOver']['clientX']	= e.clientX ;
-	engine['mouseOver']['clientY']	= e.clientY ;
+	engine['mouseOver']['clientX']	= e.pageX ;
+	engine['mouseOver']['clientY']	= e.pageY ;
 	
 	engine['mouseOver']['ctrlKey']	= e.ctrlKey ;
 	engine['mouseOver']['shiftKey']	= e.shiftKey ;
@@ -650,8 +773,8 @@ function mouseOut(e)
 	engine['mouseOut']['screenX']	= e.screenX ;
 	engine['mouseOut']['screenX']	= e.screenY ;
 	
-	engine['mouseOut']['clientX']	= e.clientX ;
-	engine['mouseOut']['clientY']	= e.clientY ;
+	engine['mouseOut']['clientX']	= e.pageX ;
+	engine['mouseOut']['clientY']	= e.pageY ;
 	
 	engine['mouseOut']['ctrlKey']	= e.ctrlKey ;
 	engine['mouseOut']['shiftKey']	= e.shiftKey ;
@@ -723,38 +846,49 @@ window.onkeypress	= keyPress ;
 window.onkeyup		= keyUp ;
 
 // TOUCH INPUT CODE
-function touchStart()
+function touchStart(event)
 {
+	var touch = event.touches[0] ;
+	
+	var coordinates = {"x" : touch.pageX, "y" : touch.pageY} ;
+	
+	// Remove the all previous & Add the New data.
+	touchData.length = 0 ;
+	touchData.push(coordinates) ;
+	
+	var data = {"fingers" : 1, "data" : touchData} ;
+	
+	engine["gesture"]["tap"] = data ;
+	
 	
 }
 
-function touchMove()
+function touchEnd(e)
 {
-	
+	//alert(JSON.stringify(engine["gesture"], undefined, 3)) ;
 }
 
-function touchEnd()
+function touchMove(e)
 {
-	
+	//alert(JSON.stringify(engine["gesture"]["tap"], undefined, 3)) ;
 }
 
-function touchEnter()
+function touchEnter(e)
 {
-	
+	//alert("Touch Enter")
 }
 
-function touchLeave()
+function touchLeave(e)
 {
-	
+	//alert("touchLeave")
 }
 
-function touchCancel()
+function touchCancel(e)
 {
-	
 }
 
 // GESTURE INPUT CODE
-function gestureTap()
+function gestureTap(event)
 {
 	
 }
@@ -812,7 +946,7 @@ function boundingBoxCollision(x1, y1, w1, h1, x2, y2, w2, h2)
 	//alert('C ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
 	//alert('D ' + x1 + ' ' + y1 + ' ' + w1 + ' ' + h1 + ' ' + x2 + ' ' + y2 + ' ' + w2 + ' ' + h2) ;
 	
-		 if(x2 		> x1 && x2		< x1 + w1 && y2 	> y1 && y2		< y1 + h1)
+	if(x2 		> x1 && x2		< x1 + w1 && y2 	> y1 && y2		< y1 + h1)
 	{
 		
 		return true ;
@@ -958,12 +1092,111 @@ function getRandomInteger(from, to)
 	return Math.floor((Math.random() * to) + from);
 }
 
+// HTML CONTROLS
+
+/*
+function createDiv(id, x, y, text, style)
+{
+	var div = document.createElement("div") ;
+	div.setAttribute("id", id) ;
+	div.setAttribute("style", "position: absolute; left:" + x + "px;top" + y + "px" + ") ;
+	div.setAttribute("class", style) ;
+	div.innerHTML = text ;
+	
+	document.body.appendChild(div) ;
+}
+
+function removeDiv(id)
+{
+	document.body.removeChild(document.getElementById(id)) ;
+}
+// =============================================================================== //
+
+// =============================================================================== //
+// Button
+function createInputButton(id, x, y, text, style)
+{
+	var inputButton = document.createElementById("input") ;
+	inputButton.setAttribute("id", "") ;
+	inputButton.setAttribute("style", "position: absolute; left:" + x + "px;top" + y + "px" + ") ;
+}
+
+function deleteInputButton(id)
+{
+	
+}
+// =============================================================================== //
+
+// =============================================================================== //
+// TextBox
+function createHTMLTextBox(id, x, y, text, style)
+{
+	var textbox = document.createElementById("input") ;
+	textbox.setAttribute("type", "text") ;
+	textbox.setAttribute("id", id) ;
+	textbox.setAttribute("value", text) ;
+	textbox.setAttribute("class", style) ;
+	
+	document.body.appendChild(textbox) ;
+}
+
+function deleteHTMLTextBox(id)
+{
+	document.body.removeChild(document.getElementById(id)) ;
+}
+// =============================================================================== //
+
+// =============================================================================== //
+// CheckBox
+function createCheckBox(id, x, y, text, state, style)
+{
+	var checkbox = document.createElement("input") ;
+	checkbox.setAttribute("type", "checkbox") ;
+	checkbox.setAttribute("id", id) ;
+	
+	if(state == "checked")
+	{
+		checkbox.setAttribute("checked", "checked") ;
+	}
+	
+	var label = document.createElement("label") ;
+	label.setAttribute("for", id) ;
+	label.innerHTML = text ;
+	
+	document.body.appendChild(checkbox) ;
+	document.body.appendChild(label) ;
+}
+
+function deleteCheckBox(id)
+{
+	document.body.removeChild(document.getElementById(id)) ;
+}
+// =============================================================================== //
+
+// =============================================================================== //
+// Radio
+function createRadioButton(id, x, y, state, style)
+{
+	
+}
+
+function deleteRadioButton()
+{
+	
+}
+*/
+// =============================================================================== //
+
 /////////////////////////
 /////	CLOUD CODE	/////
 /////////////////////////
 
 // CLOUD CODE
 
+function cloudInbox()
+{
+	
+}
 
 // TRANSACTION CODE
 

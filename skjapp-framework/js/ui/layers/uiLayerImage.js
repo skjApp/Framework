@@ -39,6 +39,19 @@ var draw_ui_layer_image = function drawUILayerImage(layer)
 	var xShift = data[layer]['xShift'] ;
 	var yShift = data[layer]['yShift'] ;
 	
+	var rotate  = data[layer]['rotate'] ;
+	
+	var rotateX	= data[layer]['rotateX'] ;
+	var rotateY	= data[layer]['rotateY'] ;
+		
+	ctx.save();
+	
+	if(rotate != undefined)
+	{
+		ctx.translate(x + rotateX, y + rotateY) ;
+		ctx.rotate(rotate * Math.PI / 180) ;
+	}
+	
 	if(xShift == undefined)
 	{
 		xShift = 0 ;
@@ -51,9 +64,17 @@ var draw_ui_layer_image = function drawUILayerImage(layer)
 		
 	if(image != undefined)
 	{
-		//consoleDiv.innerHTML = x + ' ' + xShift + ' ' + y + ' ' + yShift ;
-		ctx.drawImage(image,x + xShift,y + yShift) ;
+		if(rotate != undefined)
+		{
+			ctx.drawImage(image,x + xShift -rotateX,y + yShift -rotateY) ;
+		}
+		else
+		{
+			ctx.drawImage(image,x + xShift,y + yShift) ;
+		}
 	}
+	
+	ctx.restore() ;
 }
 
 var delete_ui_layer_image = function deleteUILayerImage()
@@ -66,7 +87,7 @@ data['engine']['ui.layer.image'] =
 {
 	'createLayer'	: create_ui_layer_image 	,
 	'getLayer'		: get_ui_layer_image		,
-	'updateLayer'	: update_ui_layer_image	,
+	'updateLayer'	: update_ui_layer_image		,
 	'drawLayer'		: draw_ui_layer_image		,
 	'deleteLayer'	: delete_ui_layer_image
 } ;
@@ -132,7 +153,6 @@ var draw_ui_layer_image_frame = function drawUILayerImageFrame(layer)
 	{
 		ctx.drawImage(image, xOffset, yOffset, w, h, x + xShift, y + yShift, w, h);
 	}
-
 }
 
 var delete_ui_layer_image_frame = function deleteUILayerImageFrame()
@@ -471,7 +491,6 @@ var delete_ui_layer_image_animation_array = function deleteUILayerImageAnimation
 {
 	alert('deleteUILayerImageAnimation') ;
 }
-
 
 data['engine']['ui.layer.image.animation.array'] = 
 {
